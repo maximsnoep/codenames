@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>codenames</title>
+  <style>
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-gap: 10px;
+      width: 400px;
+    }
+
+    .grid-item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <script src="/socket.io/socket.io.js"></script>
+  
+  <script>
+    const socket = io();
+
+    socket.on('message', (data) => {
+      console.log(`receiving message -> ${data.user_id}: ${data.message}`);
+      const li = document.createElement('li');
+      li.appendChild(document.createTextNode(`${data.user_id}: ${data.message}`));
+      document.getElementById('messages').appendChild(li);
+    });
+
+    function joinRoom() {
+      socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_id': document.getElementById('user_id').value });
+    }
+
+  </script>
+
+  <h1>Codenames</h1>
+
+  <label for="room_id">room_id</label>
+  <input id="room_id" autocomplete="off" />
+  <label for="user_id">user_id</label>
+  <input id="user_id" autocomplete="off" />
+  <button onclick="joinRoom()">join</button>
+
+  <h2>Playground</h2>
+  <div class="grid" id="grid-container"></div>
+
+  <h2>Message log</h2>
+  <ul id="messages"></ul>
+
+  <script>
+
+    // Listen for 'roomData' event to get data when joining a room
+    socket.on('roomData', (data) => {
+
+      console.log(`receiving room data -> ${data}`);
+
+      document.getElementById('grid-container').innerHTML = '';
+      data.slice(0, 25).forEach((str) => {
+        document.getElementById('grid-container').innerHTML += `<div class="grid-item">${str}</div>`;
+      });
+
+    });
+
+  </script>
+
+</body>
+
+</html>
