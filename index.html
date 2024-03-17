@@ -2,74 +2,158 @@
 <html>
 
 <head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <title>codenames</title>
   <style>
 
     .grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      grid-gap: 10px;
-      width: 400px;
+      width: 80vw;
+      max-width: 600px;
+      aspect-ratio: 1;
+
+      display: flex;
+      flex-wrap: wrap;
+      align-content: space-between;
+      justify-content: space-between;
     }
 
-    .grid-item {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
+    .grid > div {      
+      width: 19%;
+      aspect-ratio: 1;
+
+      border: 2px solid #ccc;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
     }
 
   </style>
 </head>
 
-<body>
+<body style="background-color: #f5f5f5">
 
   <script src="/socket.io/socket.io.js"></script>
   
   <script>
     const socket = io();
 
-    socket.on('message', (data) => {
-      console.log(`receiving message -> ${data.user_id}: ${data.message}`);
-      const li = document.createElement('li');
-      li.appendChild(document.createTextNode(`${data.user_id}: ${data.message}`));
-      document.getElementById('messages').appendChild(li);
-    });
+    let this_user = '';
+    let colored_field = '';
+    let uncolored_field = '';
 
-    function joinRoom() {
-      socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_id': document.getElementById('user_id').value });
-    }
-
-  </script>
-
-  <h1>Codenames</h1>
-
-  <label for="room_id">room_id</label>
-  <input id="room_id" autocomplete="off" />
-  <label for="user_id">user_id</label>
-  <input id="user_id" autocomplete="off" />
-  <button onclick="joinRoom()">join</button>
-
-  <h2>Playground</h2>
-  <div class="grid" id="grid-container"></div>
-
-  <h2>Message log</h2>
-  <ul id="messages"></ul>
-
-  <script>
-
-    // Listen for 'roomData' event to get data when joining a room
-    socket.on('roomData', (data) => {
-
-      console.log(`receiving room data -> ${data}`);
-
+    socket.on('roomUpdate', (data) => {
+      // assassin is coloring[0]
+      // red cards is coloring[1..9]
+      // blue cards is coloring[10..17]
+      // neutral is coloring[18..25]
       document.getElementById('grid-container').innerHTML = '';
-      data.slice(0, 25).forEach((str) => {
-        document.getElementById('grid-container').innerHTML += `<div class="grid-item">${str}</div>`;
+
+      this.colored_field = '';
+      this.uncolored_field = '';
+
+      data.codenames.forEach((str, i) => {
+        let index = data.coloring.indexOf(i);
+        let color = "#8c8c8c";
+        if (index == 0) {
+          color = "#242424";
+        } else
+        if (index >= 1 && index <= 9) {
+          color = "#d15656";
+        } else
+        if (index >= 10 && index <= 17) {
+          color = "#5666d1";
+        }
+
+        this.uncolored_field += `<div class="grid-item" style="background-color: white; color: black"><b>${str}</b></div>`;
+        this.colored_field += `<div class="grid-item" style="background-color: ${color}; color: white"><b>${str}</b></div>`;
+      });
+
+      document.getElementById('grid-container').innerHTML = this.uncolored_field;
+
+      if (data.admins.includes(this_user)) {
+        document.getElementById('current_user_is_admin').innerHTML = ' [admin]';
+        document.getElementById('current_user_is_admin').disabled = false;
+      } else {
+        document.getElementById('current_user_is_admin').innerHTML = '';
+        document.getElementById('current_user_is_admin').disabled = true;
+      }
+      
+
+      document.getElementById('others_in_room').innerHTML = '';
+      data.members.forEach((m) => {
+        let val = `${m}`;
+        if (data.admins.includes(m)) {
+          val = `<b>${m} [admin]</b>`;
+        }
+
+        document.getElementById('others_in_room').innerHTML += `<span data-value="${m}">${val}</span>, `;
+      });
+      
+      var members = document.getElementsByClassName("member-item");
+      Array.from(members).forEach((m) => {
+        m.addEventListener('click', (e) => { socket.emit('makeAdmin', m.getAttribute("data-value")); console.log(m.getAttribute("data-value")) });
       });
 
     });
 
+    socket.on('userUpdate', (data) => {
+      this_user = data.user;
+      document.getElementById('current_user').innerHTML = data.user;
+      document.getElementById('current_room').innerHTML = data.room;
+    });
+
+    function joinRoom() {
+      socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });
+    }
+
+    function toggleColors() {
+      if (document.getElementsByClassName('grid-item')[0].style.backgroundColor == "white") {
+        document.getElementById('grid-container').innerHTML = this.colored_field;
+      } else {
+        document.getElementById('grid-container').innerHTML = this.uncolored_field;
+      }
+    }
+
   </script>
+
+  <div class="d-flex justify-content-center flex-wrap">
+    <div class="mx-2 mb-2" style="width: 600px">
+      <h1>Codenames</h1>
+
+      <div class="mx-2 mb-2">
+        <label for="room_id">room</label>
+        <input id="room_id" value="bunny" autocomplete="off" />
+        
+        <label for="user_name">user</label>
+        <input id="user_name" value="incognito" autocomplete="off" />
+        
+        <button onclick="joinRoom()">join</button>
+
+        <p>You are <b><span id="current_user"></span><span id="current_user_is_admin"></span></b> in room <b><span id="current_room"></span></b></p>
+
+        <button onclick="toggleColors()" id="toggle_colors">toggle colors</button>
+
+      </div>
+
+      <hr/>
+
+      <div class="mx-2 mb-2 d-flex justify-content-center">
+        <div class="grid" id="grid-container"></div>
+      </div>
+
+      <hr/>
+
+      <div class="mx-2 mb-2"></div>
+        <p>Others in the room: <span id="others_in_room"></span></p>
+      </div>
+
+    </div>
+
+  </div>
 
 </body>
 
