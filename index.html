@@ -41,82 +41,53 @@
   <script>
     const socket = io();
 
-    let this_user = '';
-    let colored_field = '';
-    let uncolored_field = '';
-
     socket.on('roomUpdate', (data) => {
+
       // assassin is coloring[0]
       // red cards is coloring[1..9]
       // blue cards is coloring[10..17]
       // neutral is coloring[18..25]
       document.getElementById('grid-container').innerHTML = '';
-
-      this.colored_field = '';
-      this.uncolored_field = '';
-
       data.codenames.forEach((str, i) => {
         let index = data.coloring.indexOf(i);
-        let color = "#8c8c8c";
-        if (index == 0) {
-          color = "#242424";
-        } else
-        if (index >= 1 && index <= 9) {
-          color = "#d15656";
-        } else
-        if (index >= 10 && index <= 17) {
-          color = "#5666d1";
-        }
-
-        this.uncolored_field += `<div class="grid-item" style="background-color: white; color: black"><b>${str}</b></div>`;
-        this.colored_field += `<div class="grid-item" style="background-color: ${color}; color: white"><b>${str}</b></div>`;
+        let color1 = data.revealed[i] ? (index == 0 ? "#242424" : (index >= 1 && index <= 9 ? "#d15656" : (index >= 10 && index <= 17 ? "#5666d1" : "#8c8c8c"))) : "white";
+        let color2 = data.revealed[i] ? "white" : "black";
+        document.getElementById('grid-container').innerHTML += `<div class="grid-item" id="${i}" style="background-color: ${color1}; color: ${color2}"><b>${str}</b></div>`;
       });
 
-      document.getElementById('grid-container').innerHTML = this.uncolored_field;
+      // show room info
+      let admins = data.admins.map(a => `<span class="member-item" id="${a}">${a}👑</span>`);
+      let members = data.members.filter(m => !data.admins.includes(m)).map(m => `<span class="member-item" id="${m}">${m}</span>`);
+      document.getElementById('room_info').innerHTML = `<b>${data.id}</b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
 
-      if (data.admins.includes(this_user)) {
-        document.getElementById('current_user_is_admin').innerHTML = ' [admin]';
-        document.getElementById('current_user_is_admin').disabled = false;
-      } else {
-        document.getElementById('current_user_is_admin').innerHTML = '';
-        document.getElementById('current_user_is_admin').disabled = true;
-      }
-      
-
-      document.getElementById('others_in_room').innerHTML = '';
-      data.members.forEach((m) => {
-        let val = `${m}`;
-        if (data.admins.includes(m)) {
-          val = `<b>${m} [admin]</b>`;
-        }
-
-        document.getElementById('others_in_room').innerHTML += `<span data-value="${m}">${val}</span>, `;
+      // reveal card upon click
+      Array.from(document.getElementsByClassName("grid-item")).forEach((c) => {
+        c.addEventListener('click', (e) => { socket.emit('revealCards', [e.target.id]); });
       });
       
-      var members = document.getElementsByClassName("member-item");
-      Array.from(members).forEach((m) => {
-        m.addEventListener('click', (e) => { socket.emit('makeAdmin', m.getAttribute("data-value")); console.log(m.getAttribute("data-value")) });
+      // make admin upon click
+      Array.from(document.getElementsByClassName("member-item")).forEach((m) => {
+        m.addEventListener('click', (e) => { socket.emit('makeAdmin', e.target.id); });
       });
 
     });
 
     socket.on('userUpdate', (data) => {
-      this_user = data.user;
-      document.getElementById('current_user').innerHTML = data.user;
-      document.getElementById('current_room').innerHTML = data.room;
+      // show user info
+      document.getElementById('user_info').innerHTML = `Hello <b>${data.user}</b>, in room <b>${data.room}</b>`;
     });
 
     function joinRoom() {
       socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });
     }
 
-    function toggleColors() {
+    function toggleSpymaster() {
       if (document.getElementsByClassName('grid-item')[0].style.backgroundColor == "white") {
         document.getElementById('grid-container').innerHTML = this.colored_field;
       } else {
         document.getElementById('grid-container').innerHTML = this.uncolored_field;
       }
-    }
+    }    
 
   </script>
 
@@ -126,16 +97,21 @@
 
       <div class="mx-2 mb-2">
         <label for="room_id">room</label>
-        <input id="room_id" value="bunny" autocomplete="off" />
+        <input id="room_id" maxlength="8" value="theRoom" autocomplete="off" />
         
         <label for="user_name">user</label>
-        <input id="user_name" value="incognito" autocomplete="off" />
+        <input id="user_name" maxlength="8" value="johnny" autocomplete="off" />
         
         <button onclick="joinRoom()">join</button>
 
-        <p>You are <b><span id="current_user"></span><span id="current_user_is_admin"></span></b> in room <b><span id="current_room"></span></b></p>
+        <div class="mx-2 mb-2">
+          <span id="user_info"></span>
+        </div>
 
-        <button onclick="toggleColors()" id="toggle_colors">toggle colors</button>
+        
+        <button onclick="toggleSpymaster()" id="toggle_colors">toggle admin view</button>
+        <button onclick="socket.emit('reinitGame')" id="reinit_game">reinit game</button>
+        <button onclick="socket.emit('revealCards', [...Array(25).keys()])" id="reveal_all">reveal all</button>
 
       </div>
 
@@ -148,7 +124,7 @@
       <hr/>
 
       <div class="mx-2 mb-2"></div>
-        <p>Others in the room: <span id="others_in_room"></span></p>
+        <span id="room_info"></span>
       </div>
 
     </div>
