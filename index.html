@@ -41,6 +41,16 @@
   <script>
     const socket = io();
 
+    // choose random character from the cast of The Room (2003)
+    document.addEventListener('DOMContentLoaded', function() {
+      const characters = ["Johnny", "Lisa", "Mark", "Denny", "Michelle", "Chris-R", "Steven", "Claudette", "Mike", "Peter", "Flower shop owner", "Doggy"];
+      var randomCharacter = characters[Math.floor(Math.random() * characters.length)];
+      // set default room and user
+      document.getElementById('room_id').value = "theRoom";
+      document.getElementById('user_name').value = randomCharacter;
+    });
+
+
     socket.on('roomUpdate', (data) => {
 
       // assassin is coloring[0]
@@ -97,10 +107,10 @@
 
       <div class="mx-2 mb-2">
         <label for="room_id">room</label>
-        <input id="room_id" maxlength="8" value="theRoom" autocomplete="off" />
+        <input id="room_id" maxlength="8" value="" autocomplete="off" />
         
         <label for="user_name">user</label>
-        <input id="user_name" maxlength="8" value="johnny" autocomplete="off" />
+        <input id="user_name" maxlength="8" value="" autocomplete="off" />
         
         <button onclick="joinRoom()">join</button>
 
