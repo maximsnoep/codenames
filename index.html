@@ -78,8 +78,9 @@
       document.getElementById('grid-container').classList.remove('admin');
 
       // show room info
-      let admins = data.admins.map(a => `<span class="member-item" id="${a}">${a}👑</span>`);
-      let members = data.members.filter(m => !data.admins.includes(m)).map(m => `<span class="member-item" id="${m}">${m}</span>`);
+      // make bold for this user
+      let admins = data.admins.map(a => `<span class="member-item" id="${a}">${a === user ? '<b>' + a + '</b>' : a}</span>`);
+      let members = data.members.filter(m => !data.admins.includes(m)).map(m => `<span class="member-item" id="${m}">${m === user ? '<b>' + m + '</b>' : m}</span>`);
       document.getElementById('room_info').innerHTML = `<b>${data.id}</b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
 
       // reveal card upon click
@@ -95,6 +96,7 @@
       // show admin controls      
       console.log(data.admins);
       console.log(user);
+      console.log(socket.id);
       if (data.admins.includes(user)) {
         document.getElementById('admin_controls').innerHTML = `
           <button onclick="toggleColors()">toggle colors</button>
@@ -105,11 +107,6 @@
 
       cached_data = data;
 
-    });
-
-    socket.on('userUpdate', (data) => {
-      // show user info
-      document.getElementById('user_info').innerHTML = `Hello <b>${data.user}</b>, in room <b>${data.room}</b>`;
     });
 
     function joinRoom() {

@@ -126,9 +126,7 @@ io.on('connection', (socket) => {
       console.log(`<${user_id}> joined <${room_id}>`);
       if (user_id && room_id) room_manager.rooms[room_id].add_user(user_id);
     }
-    
-    socket.emit('userUpdate', {"user": user_id, "room": room_id});
-
+ 
     socket.join(room_id);
     io.to(room_id).emit('roomUpdate', {"user": user_id, "data": room_manager.rooms[room_id]});
   }
