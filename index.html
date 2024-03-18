@@ -40,6 +40,7 @@
   
   <script>
     const socket = io();
+    var cached_data;
 
     // choose random character from the cast of The Room (2003)
     document.addEventListener('DOMContentLoaded', function() {
@@ -50,20 +51,31 @@
       document.getElementById('user_name').value = randomCharacter;
     });
 
-
-    socket.on('roomUpdate', (data) => {
-
-      // assassin is coloring[0]
-      // red cards is coloring[1..9]
-      // blue cards is coloring[10..17]
-      // neutral is coloring[18..25]
-      document.getElementById('grid-container').innerHTML = '';
+    function buildGrid(data, admin) {
+      let grid = '';
       data.codenames.forEach((str, i) => {
         let index = data.coloring.indexOf(i);
-        let color1 = data.revealed[i] ? (index == 0 ? "#242424" : (index >= 1 && index <= 9 ? "#d15656" : (index >= 10 && index <= 17 ? "#5666d1" : "#8c8c8c"))) : "white";
-        let color2 = data.revealed[i] ? "white" : "black";
-        document.getElementById('grid-container').innerHTML += `<div class="grid-item" id="${i}" style="background-color: ${color1}; color: ${color2}"><b>${str}</b></div>`;
+        // assassin is coloring[0]
+        // red cards is coloring[1..9]
+        // blue cards is coloring[10..17]
+        // neutral is coloring[18..25]
+        let color1 = admin || data.revealed[i] ? (index == 0 ? "#242424" : (index >= 1 && index <= 9 ? "#d15656" : (index >= 10 && index <= 17 ? "#5666d1" : "#8c8c8c"))) : "white";
+        let color2 = admin || data.revealed[i] ? "white" : "black";
+        grid += `<div class="grid-item" id="${i}" style="background-color: ${color1}; color: ${color2}"><b>${str}</b></div>`;
       });
+      return grid;
+    }
+
+    socket.on('roomUpdate', (msg) => {
+
+      console.log(msg);
+
+      let data = msg.data;
+      let user = msg.user;
+
+      // show grid
+      document.getElementById('grid-container').innerHTML = buildGrid(data, false);
+      document.getElementById('grid-container').classList.remove('admin');
 
       // show room info
       let admins = data.admins.map(a => `<span class="member-item" id="${a}">${a}👑</span>`);
@@ -80,6 +92,19 @@
         m.addEventListener('click', (e) => { socket.emit('makeAdmin', e.target.id); });
       });
 
+      // show admin controls      
+      console.log(data.admins);
+      console.log(user);
+      if (data.admins.includes(user)) {
+        document.getElementById('admin_controls').innerHTML = `
+          <button onclick="toggleColors()">toggle colors</button>
+          <button onclick="socket.emit('reinitGame')">reinit game</button>
+          <button onclick="socket.emit('revealCards', [...Array(25).keys()])">reveal all</button>
+        `;
+      }
+
+      cached_data = data;
+
     });
 
     socket.on('userUpdate', (data) => {
@@ -91,21 +116,22 @@
       socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });
     }
 
-    function toggleSpymaster() {
-      if (document.getElementsByClassName('grid-item')[0].style.backgroundColor == "white") {
-        document.getElementById('grid-container').innerHTML = this.colored_field;
+    function toggleColors() {
+      document.getElementById('grid-container').classList.toggle('admin');
+      if (document.getElementById('grid-container').classList.contains('admin')) {
+        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, true);
       } else {
-        document.getElementById('grid-container').innerHTML = this.uncolored_field;
+        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
       }
     }    
 
   </script>
 
   <div class="d-flex justify-content-center flex-wrap">
-    <div class="mx-2 mb-2" style="width: 600px">
-      <h1>Codenames</h1>
+    <div style="width: 600px">
+      <h1 class="m-3">Codenames</h1>
 
-      <div class="mx-2 mb-2">
+      <div class="m-2">
         <label for="room_id">room</label>
         <input id="room_id" maxlength="8" value="" autocomplete="off" />
         
@@ -113,21 +139,16 @@
         <input id="user_name" maxlength="8" value="" autocomplete="off" />
         
         <button onclick="joinRoom()">join</button>
-
-        <div class="mx-2 mb-2">
-          <span id="user_info"></span>
-        </div>
-
-        
-        <button onclick="toggleSpymaster()" id="toggle_colors">toggle admin view</button>
-        <button onclick="socket.emit('reinitGame')" id="reinit_game">reinit game</button>
-        <button onclick="socket.emit('revealCards', [...Array(25).keys()])" id="reveal_all">reveal all</button>
-
       </div>
 
       <hr/>
 
-      <div class="mx-2 mb-2 d-flex justify-content-center">
+      <div class="m-2 d-flex flex-wrap flex-column">
+        <span id="user_info"></span>
+        <span id="admin_controls"></span>
+      </div>
+
+      <div class="m-5 d-flex justify-content-center">
         <div class="grid" id="grid-container"></div>
       </div>
 

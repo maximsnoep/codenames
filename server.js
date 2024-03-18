@@ -81,10 +81,7 @@ const RoomManager = class {
     if (!this.is_admin_in_room(admin_id, room_id)) { return }
     this.rooms[room_id].remove_admin(user_id);
 
-    console.log(this.rooms[room_id].admins)
-
     for (const id of Object.entries(this.rooms).filter(([_, room]) => room.admins.length == 0).map(([id, _]) => id)) {
-      console.log(this.rooms[id]);
       room_manager.add_admin_to_room("mr. bunny", this.rooms[id].members[0], id);
     }
   }
@@ -110,14 +107,13 @@ io.on('connection', (socket) => {
   var room_id;
   
   function leave_room() {
-    console.log(`<${user_id}> left <${room_id}>`);  
+    if (user_id && room_id) console.log(`<${user_id}> left <${room_id}>`);  
     if (user_id && room_id) room_manager.rooms[room_id].remove_user(user_id);
     if (user_id && room_id) room_manager.remove_admin_from_room(user_id, user_id, room_id);
     room_manager.remove_empty_rooms();
 
     socket.leave(room_id);
-    io.to(room_id).emit('announcement', {'message': `A user [${user_id}] left your room [${room_id}]`});
-    io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
+    io.to(room_id).emit('roomUpdate', {"user": user_id, "data": room_manager.rooms[room_id]});
   }
 
   function join_room() {
@@ -134,8 +130,7 @@ io.on('connection', (socket) => {
     socket.emit('userUpdate', {"user": user_id, "room": room_id});
 
     socket.join(room_id);
-    io.to(room_id).emit('announcement', {'message': `A user [${user_id}] joined your room [${room_id}]`});
-    io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
+    io.to(room_id).emit('roomUpdate', {"user": user_id, "data": room_manager.rooms[room_id]});
   }
 
   
@@ -154,7 +149,7 @@ io.on('connection', (socket) => {
       room_manager.add_admin_to_room(user_id, user_to_be_made_admin, room_id);
     }
     
-    io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
+    io.to(room_id).emit('roomUpdate', {"user": user_id, "data": room_manager.rooms[room_id]});
   });
 
   socket.on('disconnect', () => {
@@ -165,12 +160,12 @@ io.on('connection', (socket) => {
     for (const card_id of card_ids) {
       room_manager.reveal_card(room_id, card_id);
     }
-    io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
+    io.to(room_id).emit('roomUpdate', {"user": user_id, "data": room_manager.rooms[room_id]});
   });
 
   socket.on('reinitGame', () => {
     room_manager.rooms[room_id].fill();
-    io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
+    io.to(room_id).emit('roomUpdate', {"user": user_id, "data": room_manager.rooms[room_id]});
   });
 
 });
