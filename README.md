@@ -1,3 +1,3 @@
-[live demo](codenames.snoep.io)
+[live demo](http://codenames.snoep.io)
 
 run locally: ```npm start```
