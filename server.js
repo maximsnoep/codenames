@@ -7,10 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-// Serve your HTML and JavaScript files here
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
+// serve all files in /public as static files
+app.use(express.static("public"));
 
 server.listen(8080, () => {
   console.log('Server is running on http://localhost:8080');
