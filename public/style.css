@@ -45,4 +45,8 @@ div.unrevealed {
     color: #000000;
 }
 
+.hidden {
+    visibility: hidden;
+}
+
 

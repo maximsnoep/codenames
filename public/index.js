@@ -10,9 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('user_name').value = randomCharacter;
 });
 
+const codeMasterOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 0, 21, 22, 23, 24, 10, 11, 12, 13, 14, 15, 16, 17];
+const defaultOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+let wordOrder = defaultOrder;
+
 function buildGrid(data, admin) {
     let grid = '';
-    data.codenames.forEach((str, i) => {
+    let id_in_data = -1;
+    for (let i of wordOrder) {
+        let str = data.codenames[i];
+        id_in_data += 1;
         let index = data.coloring.indexOf(i);
         // assassin is coloring[0]
         // red cards is coloring[1..9]
@@ -30,8 +37,8 @@ function buildGrid(data, admin) {
                 card_type = "innocent-revealed";
             }
         }
-        grid += `<div class="grid-item ${card_type}" id="${i}"><b>${str}</b></div>`
-    });
+        grid += `<div class="grid-item ${card_type}" id="${i}" onclick="{ socket.emit('revealCards', [${i}]); }"><b>${str}</b></div>`
+    }
     return grid;
 }
 
@@ -67,11 +74,7 @@ socket.on('roomUpdate', (msg) => {
     console.log(user);
     console.log(socket.id);
     if (data.admins.includes(user)) {
-        document.getElementById('admin_controls').innerHTML = `
-          <button onclick="toggleColors()">toggle colors</button>
-          <button onclick="socket.emit('reinitGame')">reinit game</button>
-          <button onclick="socket.emit('revealCards', [...Array(25).keys()])">reveal all</button>
-        `;
+        document.getElementById('admin_controls').classList.remove('hidden');
     }
 
     cached_data = data;
@@ -90,3 +93,22 @@ function toggleColors() {
         document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
     }
 }    
+
+function sortWords() {
+    let button = document.getElementById('word-order');
+    if (button.textContent === 'codemaster order') {
+        wordOrder = [];
+        for (let i of codeMasterOrder) {
+            wordOrder.push(cached_data.coloring[i]);
+        }
+        button.innerHTML = 'player order';
+    } else {
+        wordOrder = defaultOrder;
+        button.innerHTML = 'codemaster order';
+    }
+    if (document.getElementById('grid-container').classList.contains('admin')) {
+        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, true);
+    } else {
+        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
+    }
+}

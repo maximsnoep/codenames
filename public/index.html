@@ -33,7 +33,12 @@
 
       <div class="m-2 d-flex flex-wrap flex-column">
         <span id="user_info"></span>
-        <span id="admin_controls"></span>
+        <span class="hidden" id="admin_controls">
+          <button onclick="toggleColors()">toggle colors</button>
+          <button onclick="sortWords()" id='word-order'>codemaster order</button>
+          <button onclick="socket.emit('reinitGame')">reinit game</button>
+          <button onclick="socket.emit('revealCards', [...Array(25).keys()])">reveal all</button>          
+        </span>
       </div>
 
       <div class="m-5 d-flex justify-content-center">
