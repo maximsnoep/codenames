@@ -49,7 +49,7 @@ function buildGrid(data, admin) {
 socket.on('wordlistUpdate', (data) => {
     let dropDown = '';
     data.forEach(list => {
-        dropDown += `<button class='dropdown-content' style='position: absolute' onclick='socket.emit('reinitGame', ${list});'>${list}</button></br>`
+        dropDown += `<button class='dropdown-content' style='position: absolute' onclick='reinitItemClicked("${list}")'>${list}</button></br>`
     });
     document.getElementById('reinitDropdown').innerHTML = dropDown;
 });
@@ -127,4 +127,8 @@ function sortWords() {
     } else {
         document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
     }
+}
+
+function reinitItemClicked(item) {
+    socket.emit('reinitGame', item);
 }
