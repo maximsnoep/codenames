@@ -84,6 +84,8 @@ io.on('connection', (socket) => {
 
   console.log(`A socket [${socket.id}] connected.`);
   
+  io.to(socket.id).emit('wordlistUpdate', 123);
+
   function update(room_id) {
     io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
   }

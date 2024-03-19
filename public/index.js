@@ -47,6 +47,10 @@ function buildGrid(data, admin) {
     return grid;
 }
 
+socket.on('wordlistUpdate', (data) => {
+    console.log(data);
+});
+
 socket.on('roomUpdate', (data) => {
 
     console.log(data);
