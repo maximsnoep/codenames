@@ -1,5 +1,8 @@
 const socket = io();
 let cached_data;
+const codeMasterOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 0, 21, 22, 23, 24, 10, 11, 12, 13, 14, 15, 16, 17];
+const defaultOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+let wordOrder = defaultOrder;
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
@@ -9,10 +12,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('room_id').value = "theRoom";
     document.getElementById('user_name').value = randomCharacter;
 });
-
-const codeMasterOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 0, 21, 22, 23, 24, 10, 11, 12, 13, 14, 15, 16, 17];
-const defaultOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
-let wordOrder = defaultOrder;
 
 function buildGrid(data, admin) {
     let grid = '';
@@ -48,7 +47,11 @@ function buildGrid(data, admin) {
 }
 
 socket.on('wordlistUpdate', (data) => {
-    console.log(data);
+    let dropDown = '';
+    data.forEach(list => {
+        dropDown += `<button class='dropdown-content' style='position: absolute' onclick='socket.emit('reinitGame', ${list});'>${list}</button></br>`
+    });
+    document.getElementById('reinitDropdown').innerHTML = dropDown;
 });
 
 socket.on('roomUpdate', (data) => {
@@ -124,10 +127,4 @@ function sortWords() {
     } else {
         document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
     }
-}
-
-function reinitDropdown() {
-    
-    
-    socket.emit('reinitGame', 'original');
 }

@@ -36,9 +36,9 @@
         <span class="hidden" id="admin_controls">
           <button onclick="toggleColors()">toggle colors</button>
           <button onclick="sortWords()" id='word-order'>codemaster order</button>
-          <button onclick="reinitDropdown()">reinit game</button>
-          <button onclick="socket.emit('revealCards', [...Array(25).keys()])">reveal all</button>
-          
+          <details id="reinitDropdown"><summary>reinit game</summary></details>
+<!--          <button onclick="reinitDropdown()" id='reinitButton'>reinit game</button>-->
+          <button onclick="socket.emit('revealCards', [...Array(25).keys()])">reveal all</button>          
         </span>
       </div>
 

@@ -65,4 +65,8 @@ div.default {
     visibility: hidden;
 }
 
+details > div {
+    z-index: 10;
+}
+
 

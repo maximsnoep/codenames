@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -83,8 +84,10 @@ const room_manager = new RoomManager();
 io.on('connection', (socket) => {
 
   console.log(`A socket [${socket.id}] connected.`);
-  
-  io.to(socket.id).emit('wordlistUpdate', 123);
+
+  let files = fs.readdirSync('./public/wordlists/');
+  files = files.map(f => path.parse(f).name);
+  io.to(socket.id).emit('wordlistUpdate', files);
 
   function update(room_id) {
     io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
@@ -118,7 +121,7 @@ io.on('connection', (socket) => {
       }
     }
     room_manager.remove_empty_rooms();
-  } 
+  }
 
   socket.on('disconnect', () => {
     leave_room()
