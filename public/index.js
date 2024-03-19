@@ -47,7 +47,7 @@ function buildGrid(data, admin) {
 }
 
 socket.on('wordlistUpdate', (data) => {
-    let dropDown = '';
+    let dropDown = '<summary>reinit game</summary>';
     data.forEach(list => {
         dropDown += `<button class='dropdown-content' style='position: absolute' onclick='reinitItemClicked("${list}")'>${list}</button></br>`
     });
