@@ -18,15 +18,15 @@ function buildGrid(data, admin) {
     let grid = '';
     let id_in_data = -1;
     for (let i of wordOrder) {
-        let str = data.codenames[i];
+        let str = data.game.codenames[i];
         id_in_data += 1;
-        let index = data.coloring.indexOf(i);
+        let index = data.game.coloring.indexOf(i);
         // assassin is coloring[0]
         // red cards is coloring[1..9]
         // blue cards is coloring[10..17]
         // neutral is coloring[18..25]
         let card_type = "unrevealed";
-        if (admin || data.revealed[i]) {
+        if (admin || data.game.revealed[i]) {
             if (index === 0) {
                 card_type = "assassin";
             } else if (index >= 1 && index <= 9) {
@@ -42,12 +42,9 @@ function buildGrid(data, admin) {
     return grid;
 }
 
-socket.on('roomUpdate', (msg) => {
+socket.on('roomUpdate', (data) => {
 
-    console.log(msg);
-
-    let data = msg.data;
-    let user = msg.user;
+    console.log(data);
 
     // show grid
     document.getElementById('grid-container').innerHTML = buildGrid(data, false);
@@ -55,8 +52,16 @@ socket.on('roomUpdate', (msg) => {
 
     // show room info
     // make bold for this user
-    let admins = data.admins.map(a => `<span class="member-item" id="${a}">${a === user ? '<b>' + a + '</b>' : a}</span>`);
-    let members = data.members.filter(m => !data.admins.includes(m)).map(m => `<span class="member-item" id="${m}">${m === user ? '<b>' + m + '</b>' : m}</span>`);
+    let admins = [];
+    let members = [];
+    for (const [id, member] of Object.entries(data.members)) {
+    let m = `<span class="member-item" id="${id}" style="font-weight: ${id === socket.id ? "bold" : "normal"}" >${member.name}</span>`;
+    if (member.admin) {
+        admins.push(m);
+    } else {
+        members.push(m);
+    }
+    }
     document.getElementById('room_info').innerHTML = `<b>${data.id}</b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
 
     // reveal card upon click
@@ -66,15 +71,14 @@ socket.on('roomUpdate', (msg) => {
 
     // make admin upon click
     Array.from(document.getElementsByClassName("member-item")).forEach((m) => {
-        m.addEventListener('click', (e) => { socket.emit('makeAdmin', e.target.id); });
+        m.addEventListener('click', (e) => { socket.emit('toggleAdmin', e.target.id); });
     });
 
-    // show admin controls      
-    console.log(data.admins);
-    console.log(user);
-    console.log(socket.id);
-    if (data.admins.includes(user)) {
+    // show admin controls
+    if (data.members[socket.id].admin) {
         document.getElementById('admin_controls').classList.remove('hidden');
+    } else {
+        document.getElementById('admin_controls').classList.add('hidden');
     }
 
     cached_data = data;
@@ -99,7 +103,7 @@ function sortWords() {
     if (button.textContent === 'codemaster order') {
         wordOrder = [];
         for (let i of codeMasterOrder) {
-            wordOrder.push(cached_data.coloring[i]);
+            wordOrder.push(cached_data.game.coloring[i]);
         }
         button.innerHTML = 'player order';
     } else {
