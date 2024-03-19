@@ -1,10 +1,10 @@
 const socket = io();
-var cached_data;
+let cached_data;
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
     const characters = ["Johnny", "Lisa", "Mark", "Denny", "Michelle", "Chris-R", "Steven", "Claudette", "Mike", "Peter", "Florist", "Doggy"];
-    var randomCharacter = characters[Math.floor(Math.random() * characters.length)];
+    let randomCharacter = characters[Math.floor(Math.random() * characters.length)];
     // set default room and user
     document.getElementById('room_id').value = "theRoom";
     document.getElementById('user_name').value = randomCharacter;
@@ -16,10 +16,8 @@ let wordOrder = defaultOrder;
 
 function buildGrid(data, admin) {
     let grid = '';
-    let id_in_data = -1;
     for (let i of wordOrder) {
         let str = data.game.codenames[i];
-        id_in_data += 1;
         let index = data.game.coloring.indexOf(i);
         // assassin is coloring[0]
         // red cards is coloring[1..9]
@@ -115,4 +113,10 @@ function sortWords() {
     } else {
         document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
     }
+}
+
+function reinitDropdown() {
+    
+    
+    socket.emit('reinitGame', 'original');
 }

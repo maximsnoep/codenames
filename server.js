@@ -15,8 +15,8 @@ server.listen(8080, () => {
 });
 
 const Game = class {
-  constructor() {
-    this.codenames = fs.readFileSync('public/original.txt', 'utf8').split('\n').sort(() => 0.5 - Math.random()).slice(0, 25);
+  constructor(wordList) {
+    this.codenames = fs.readFileSync(`public/wordlists/${wordList}.txt`, 'utf8').split('\n').sort(() => 0.5 - Math.random()).slice(0, 25);
     // assassin is coloring[0]
     // red cards is coloring[1..9]
     // blue cards is coloring[10..18]
@@ -40,7 +40,7 @@ const Room = class {
   constructor(id) {
     this.id = id;
     this.members = {};
-    this.game = new Game();
+    this.game = new Game('original');
   }
 
   // member management
@@ -150,15 +150,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('reinitGame', () => {
+  socket.on('reinitGame', (wordList) => {
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
       if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
-      room_manager.rooms[room_id].game = new Game();
+      room_manager.rooms[room_id].game = new Game(wordList);
       update(room_id);
     }
   });
-
-
-
 });
