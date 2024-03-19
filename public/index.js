@@ -23,18 +23,25 @@ function buildGrid(data, admin) {
         // red cards is coloring[1..9]
         // blue cards is coloring[10..17]
         // neutral is coloring[18..25]
-        let card_type = "unrevealed";
-        if (admin || data.game.revealed[i]) {
-            if (index === 0) {
-                card_type = "assassin";
-            } else if (index >= 1 && index <= 9) {
-                card_type = "red-revealed";
-            } else if (index >= 10 && index <= 17) {
-                card_type = "blue-revealed";
-            } else {
-                card_type = "innocent-revealed";
-            }
+        let card;
+        if (index === 0) {
+            card = "assassin";
+        } else if (index >= 1 && index <= 9) {
+            card = "red";
+        } else if (index >= 10 && index <= 17) {
+            card = "blue";
+        } else {
+            card = "innocent";
         }
+
+        if (data.game.revealed[i]) {
+            card_type = card+"-revealed";
+        } else if (admin) {
+            card_type = card+"-unrevealed";
+        } else {
+            card_type = "default"
+        }
+        
         grid += `<div class="grid-item ${card_type}" id="${i}" onclick="{ socket.emit('revealCards', [${i}]); }"><b>${str}</b></div>`
     }
     return grid;

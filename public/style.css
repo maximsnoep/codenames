@@ -20,9 +20,13 @@ div.grid-item {
     align-items: center;
 }
 
-div.assassin {
+div.assassin-revealed {
     background-color: #242424;
     color: #ffffff;
+}
+
+div.assassin-unrevealed {
+    border-color: #242424;
 }
 
 div.red-revealed {
@@ -30,9 +34,17 @@ div.red-revealed {
     color: #ffffff;
 }
 
+div.red-unrevealed {
+    border-color: #d15656;
+}
+
 div.blue-revealed {
     background-color: #5666d1;
     color: #ffffff;
+}
+
+div.blue-unrevealed {
+    border-color: #5666d1;
 }
 
 div.innocent-revealed {
@@ -40,7 +52,11 @@ div.innocent-revealed {
     color: #ffffff;
 }
 
-div.unrevealed {
+div.innocent-unrevealed {
+    border-color: #8c8c8c;
+}
+
+div.default {
     background-color: #ffffff;
     color: #000000;
 }
