@@ -18,9 +18,19 @@ function buildGrid(data, admin) {
         // red cards is coloring[1..9]
         // blue cards is coloring[10..17]
         // neutral is coloring[18..25]
-        let color1 = admin || data.revealed[i] ? (index == 0 ? "#242424" : (index >= 1 && index <= 9 ? "#d15656" : (index >= 10 && index <= 17 ? "#5666d1" : "#8c8c8c"))) : "white";
-        let color2 = admin || data.revealed[i] ? "white" : "black";
-        grid += `<div class="grid-item" id="${i}" style="background-color: ${color1}; color: ${color2}"><b>${str}</b></div>`;
+        let card_type = "unrevealed";
+        if (admin || data.revealed[i]) {
+            if (index === 0) {
+                card_type = "assassin";
+            } else if (index >= 1 && index <= 9) {
+                card_type = "red-revealed";
+            } else if (index >= 10 && index <= 17) {
+                card_type = "blue-revealed";
+            } else {
+                card_type = "innocent-revealed";
+            }
+        }
+        grid += `<div class="grid-item ${card_type}" id="${i}"><b>${str}</b></div>`
     });
     return grid;
 }
@@ -44,7 +54,7 @@ socket.on('roomUpdate', (msg) => {
 
     // reveal card upon click
     Array.from(document.getElementsByClassName("grid-item")).forEach((c) => {
-        c.addEventListener('click', (e) => { socket.emit('revealCards', [e.target.id]); });
+        c.addEventListener('click', (e) => { socket.emit('revealCards', [c.id]); });
     });
 
     // make admin upon click

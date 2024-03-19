@@ -1,0 +1,48 @@
+.grid {
+    width: 80vw;
+    max-width: 600px;
+    aspect-ratio: 1;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-between;
+    justify-content: space-between;
+}
+
+div.grid-item {
+    width: 19%;
+    aspect-ratio: 1;
+
+    border: 2px solid #ccc;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+div.assassin {
+    background-color: #242424;
+    color: #ffffff;
+}
+
+div.red-revealed {
+    background-color: #d15656;
+    color: #ffffff;
+}
+
+div.blue-revealed {
+    background-color: #5666d1;
+    color: #ffffff;
+}
+
+div.innocent-revealed {
+    background-color: #8c8c8c;
+    color: #ffffff;
+}
+
+div.unrevealed {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+
