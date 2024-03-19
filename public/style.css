@@ -1,6 +1,6 @@
 .grid {
     width: 80vw;
-    max-width: 600px;
+    max-width: 50rem;
     aspect-ratio: 1;
 
     display: flex;
@@ -13,7 +13,10 @@ div.grid-item {
     width: 19%;
     aspect-ratio: 1;
 
-    border: 2px solid #ccc;
+    background-color: #ffffff;
+    border: 0.2rem solid #ccc;
+    
+    font-size: 0.8rem;
 
     display: flex;
     justify-content: center;
@@ -54,11 +57,6 @@ div.innocent-revealed {
 
 div.innocent-unrevealed {
     border-color: #8c8c8c;
-}
-
-div.default {
-    background-color: #ffffff;
-    color: #000000;
 }
 
 .hidden {

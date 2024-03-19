@@ -41,7 +41,7 @@ const Room = class {
   constructor(id) {
     this.id = id;
     this.members = {};
-    this.game = new Game('original');
+    this.game = new Game('theroom');
   }
 
   // member management
