@@ -1,8 +1,5 @@
 const socket = io();
 let cached_data;
-const codeMasterOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 0, 21, 22, 23, 24, 10, 11, 12, 13, 14, 15, 16, 17];
-const defaultOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
-let wordOrder = defaultOrder;
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,9 +10,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('user_name').value = randomCharacter;
 });
 
-function buildGrid(data, admin) {
+function buildGrid(data, admin, sorted) {
     let grid = '';
-    for (let i of wordOrder) {
+
+    let word_indices = [];
+    if (sorted && sorted !== null) {
+        word_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 0, 21, 22, 23, 24, 10, 11, 12, 13, 14, 15, 16, 17].map(i => data.game.coloring[i]);
+    } else {
+        word_indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+    }
+
+    for (let i of word_indices) {
         let str = data.game.codenames[i];
         let index = data.game.coloring.indexOf(i);
         // assassin is coloring[0]
@@ -35,7 +40,7 @@ function buildGrid(data, admin) {
 
         if (data.game.revealed[i]) {
             card_type = card+"-revealed";
-        } else if (admin) {
+        } else if (admin && admin !== null) {
             card_type = card+"-unrevealed";
         } else {
             card_type = "default"
@@ -51,16 +56,14 @@ socket.on('wordlistUpdate', (data) => {
     data.forEach(list => {
         dropDown += `<button class='dropdown-content' style='position: absolute' onclick='reinitItemClicked("${list}")'>${list}</button></br>`
     });
-    document.getElementById('reinitDropdown').innerHTML = dropDown;
 });
 
 socket.on('roomUpdate', (data) => {
 
-    console.log(data);
-
     // show grid
-    document.getElementById('grid-container').innerHTML = buildGrid(data, false);
-    document.getElementById('grid-container').classList.remove('admin');
+    let sorted = document.getElementById('sorted').checked;
+    let admin = document.getElementById('colors').checked;
+    document.getElementById('grid-container').innerHTML = buildGrid(data, admin, sorted);
 
     // show room info
     // make bold for this user
@@ -88,47 +91,25 @@ socket.on('roomUpdate', (data) => {
 
     // show admin controls
     if (data.members[socket.id].admin) {
-        document.getElementById('admin_controls').classList.remove('hidden');
+        document.getElementById('admin-controls').classList.remove('hidden');
     } else {
-        document.getElementById('admin_controls').classList.add('hidden');
+        document.getElementById('admin-controls').classList.add('hidden');
     }
 
     cached_data = data;
+
+    document.getElementById('admin-controls').addEventListener('change', function() {
+        let sorted = document.getElementById('sorted').checked;
+        let admin = document.getElementById('colors').checked;
+        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, admin, sorted);
+    });
+
+    document.getElementById('wordsets').addEventListener('change', function() {
+        socket.emit('reinitGame', document.getElementById('wordset').value);
+    });
 
 });
 
 function joinRoom() {
     socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });
-}
-
-function toggleColors() {
-    document.getElementById('grid-container').classList.toggle('admin');
-    if (document.getElementById('grid-container').classList.contains('admin')) {
-        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, true);
-    } else {
-        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
-    }
-}    
-
-function sortWords() {
-    let button = document.getElementById('word-order');
-    if (button.textContent === 'codemaster order') {
-        wordOrder = [];
-        for (let i of codeMasterOrder) {
-            wordOrder.push(cached_data.game.coloring[i]);
-        }
-        button.innerHTML = 'player order';
-    } else {
-        wordOrder = defaultOrder;
-        button.innerHTML = 'codemaster order';
-    }
-    if (document.getElementById('grid-container').classList.contains('admin')) {
-        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, true);
-    } else {
-        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, false);
-    }
-}
-
-function reinitItemClicked(item) {
-    socket.emit('reinitGame', item);
 }

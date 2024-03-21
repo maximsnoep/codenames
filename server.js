@@ -101,7 +101,6 @@ io.on('connection', (socket) => {
       room_manager.rooms[room_id] = new Room(room_id);
       room_manager.rooms[room_id].add_member(socket.id, new Member(user_name));
       room_manager.rooms[room_id].add_admin(socket.id);
-      console.log(room_manager.rooms[room_id].members);
     } else {
       console.log(`${socket.id} (${user_name}) joined <${room_id}>`);
       room_manager.rooms[room_id].add_member(socket.id, new Member(user_name));

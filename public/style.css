@@ -60,7 +60,7 @@ div.innocent-unrevealed {
 }
 
 .hidden {
-    visibility: hidden;
+    display: none !important;
 }
 
 details > div {
