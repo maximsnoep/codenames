@@ -35,14 +35,23 @@
 
       <hr/>
 
-      <div class="m-2 d-flex flex-wrap flex-column">
-        <span id="user_info"></span>
-        <span class="hidden" id="admin_controls">
-          <button onclick="toggleColors()">toggle colors</button>
-          <button onclick="sortWords()" id='word-order'>codemaster order</button>
-          <details id="reinitDropdown"><summary>reinit game</summary></details>
-          <button onclick="socket.emit('revealCards', [...Array(25).keys()])">reveal all</button>          
-        </span>
+      <div class="hidden m-2 d-flex justify-content-center w-100" id="admin-controls">
+        <form id="toggles" class="d-flex">
+          <div class="p-2">
+            <input type="checkbox" id="colors" name="colors" value="colors" />
+            <label for="colors">colors</label>
+          </div>
+          <div class="p-2">
+            <input type="checkbox" id="sorted" name="sorted" value="sorted" />
+            <label for="sorted">sorted</label>
+          </div>
+        </form>
+
+        <form class="p-2">
+          <select id="wordlist" name="wordlist">
+          </select>
+        </form>     
+
       </div>
 
       <div class="m-2 d-flex justify-content-center">

@@ -52,10 +52,11 @@ function buildGrid(data, admin, sorted) {
 }
 
 socket.on('wordlistUpdate', (data) => {
-    let dropDown = '<summary>reinit game</summary>';
+    let options = ''
     data.forEach(list => {
-        dropDown += `<button class='dropdown-content' style='position: absolute' onclick='reinitItemClicked("${list}")'>${list}</button></br>`
+        options += `<option value="${list}">${list}</option>`
     });
+    document.getElementById('wordlist').innerHTML = options;
 });
 
 socket.on('roomUpdate', (data) => {
@@ -98,14 +99,14 @@ socket.on('roomUpdate', (data) => {
 
     cached_data = data;
 
-    document.getElementById('admin-controls').addEventListener('change', function() {
+    document.getElementById('toggles').addEventListener('change', function() {
         let sorted = document.getElementById('sorted').checked;
         let admin = document.getElementById('colors').checked;
         document.getElementById('grid-container').innerHTML = buildGrid(cached_data, admin, sorted);
     });
 
-    document.getElementById('wordsets').addEventListener('change', function() {
-        socket.emit('reinitGame', document.getElementById('wordset').value);
+    document.getElementById('wordlist').addEventListener('change', function() {
+        socket.emit('reinitGame', document.getElementById('wordlist').value);
     });
 
 });
