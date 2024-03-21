@@ -22,11 +22,11 @@
       <div class="d-flex flex-wrap">
         <div class="m-2">
           <label for="user_name">user</label>
-          <input id="user_name" maxlength="8" value="" autocomplete="off" />
+          <input type="text" id="user_name" maxlength="8" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="return /[a-z]/i.test(event.key)" />
         </div>
         <div class="m-2">
           <label for="room_id">room</label>
-          <input id="room_id" maxlength="8" value="" autocomplete="off" />
+          <input type="text" id="room_id" maxlength="8" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="return /[a-z]/i.test(event.key)" />
         </div>
         <div class="m-2">
           <button onclick="joinRoom()">join</button>

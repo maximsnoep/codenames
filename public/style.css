@@ -30,6 +30,7 @@ div.assassin-revealed {
 
 div.assassin-unrevealed {
     border-color: #242424;
+    background-color: #c0c0c0;
 }
 
 div.red-revealed {
@@ -39,6 +40,7 @@ div.red-revealed {
 
 div.red-unrevealed {
     border-color: #d15656;
+    background-color: #ffe9e9;
 }
 
 div.blue-revealed {
@@ -48,6 +50,7 @@ div.blue-revealed {
 
 div.blue-unrevealed {
     border-color: #5666d1;
+    background-color: #e6eaff;
 }
 
 div.innocent-revealed {
@@ -67,4 +70,7 @@ details > div {
     z-index: 10;
 }
 
+input[type="text"] {
+    text-transform: lowercase;
+}
 

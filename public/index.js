@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const characters = ["Johnny", "Lisa", "Mark", "Denny", "Michelle", "Chris-R", "Steven", "Claudette", "Mike", "Peter", "Florist", "Doggy"];
     let randomCharacter = characters[Math.floor(Math.random() * characters.length)];
     // set default room and user
-    document.getElementById('room_id').value = "theRoom";
+    document.getElementById('room_id').value = "rooftop";
     document.getElementById('user_name').value = randomCharacter;
 });
 
@@ -78,7 +78,7 @@ socket.on('roomUpdate', (data) => {
         members.push(m);
     }
     }
-    document.getElementById('room_info').innerHTML = `<b>${data.id}</b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
+    document.getElementById('room_info').innerHTML = `<b><u>${data.id}</u></b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
 
     // reveal card upon click
     Array.from(document.getElementsByClassName("grid-item")).forEach((c) => {

@@ -48,14 +48,13 @@ const Room = class {
   is_member(id) { return id in this.members; }
   add_member(id, m) { this.members[id] = m; }
   del_member(id) { delete this.members[id]; }
-
   num_members() { return Object.keys(this.members).length; }
-  is_empty() { return this.num_members() == 0; }
 
   // admin management
   is_admin(id) { return this.is_member(id) && this.members[id].admin }
   add_admin(id) { if (this.is_member(id)) this.members[id].admin = true; }
   del_admin(id) { if (this.is_member(id)) this.members[id].admin = false; }
+  num_admins() { return Object.keys(this.members).filter(id => this.members[id].admin).length };
 
 };
 
@@ -65,7 +64,7 @@ const RoomManager = class {
   }
 
   remove_empty_rooms() {
-    for (const id of Object.entries(this.rooms).filter(([_, room]) => room.is_empty()).map(([id, _]) => id)) {
+    for (const id of Object.entries(this.rooms).filter(([_, room]) => room.num_members == 0).map(([id, _]) => id)) {
       id && delete this.rooms[id];
     }
   }
@@ -115,6 +114,9 @@ io.on('connection', (socket) => {
       if (room_manager.rooms[room_id].is_member(socket.id)) {
         console.log(`<${socket.id}> left <${room_id}>`);
         room_manager.rooms[room_id].del_member(socket.id);
+        if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
+          room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
+        }
         socket.leave(room_id);
         update(room_id);
       }
@@ -129,7 +131,7 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (dataObject) => {
     leave_room();
     let user_name = dataObject.user_name + "#" + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    join_room(dataObject.room_id, user_name);
+    join_room(dataObject.room_id.toLowerCase(), user_name.toLowerCase());
   });
 
   socket.on('toggleAdmin', (user_id) => {
