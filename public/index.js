@@ -1,5 +1,4 @@
 const socket = io();
-let cached_data;
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
@@ -71,18 +70,18 @@ socket.on('roomUpdate', (data) => {
     let admins = [];
     let members = [];
     for (const [id, member] of Object.entries(data.members)) {
-    let m = `<span class="member-item" id="${id}" style="font-weight: ${id === socket.id ? "bold" : "normal"}" >${member.name}</span>`;
-    if (member.admin) {
-        admins.push(m);
-    } else {
-        members.push(m);
-    }
+        let m = `<span class="member-item" id="${id}" style="font-weight: ${id === socket.id ? "bold" : "normal"}" >${member.name}</span>`;
+        if (member.admin) {
+            admins.push(m);
+        } else {
+            members.push(m);
+        }
     }
     document.getElementById('room_info').innerHTML = `<b><u>${data.id}</u></b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
 
     // reveal card upon click
     Array.from(document.getElementsByClassName("grid-item")).forEach((c) => {
-        c.addEventListener('click', (e) => { socket.emit('revealCards', [c.id]); });
+        c.addEventListener('click', () => { socket.emit('revealCards', [c.id]); });
     });
 
     // make admin upon click
@@ -97,12 +96,10 @@ socket.on('roomUpdate', (data) => {
         document.getElementById('admin-controls').classList.add('hidden');
     }
 
-    cached_data = data;
-
     document.getElementById('toggles').addEventListener('change', function() {
         let sorted = document.getElementById('sorted').checked;
         let admin = document.getElementById('colors').checked;
-        document.getElementById('grid-container').innerHTML = buildGrid(cached_data, admin, sorted);
+        document.getElementById('grid-container').innerHTML = buildGrid(data, admin, sorted);
     });
 
     document.getElementById('wordlist').addEventListener('change', function() {

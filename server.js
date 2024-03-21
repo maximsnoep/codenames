@@ -64,7 +64,7 @@ const RoomManager = class {
   }
 
   remove_empty_rooms() {
-    for (const id of Object.entries(this.rooms).filter(([_, room]) => room.num_members == 0).map(([id, _]) => id)) {
+    for (const id of Object.entries(this.rooms).filter(([_, room]) => room.num_members() == 0).map(([id, _]) => id)) {
       id && delete this.rooms[id];
     }
   }
@@ -138,9 +138,10 @@ io.on('connection', (socket) => {
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
       if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
-      if (room_manager.rooms[room_id].num_members == 1) { return }
-
       room_manager.rooms[room_id].members[user_id].admin = !room_manager.rooms[room_id].members[user_id].admin;
+      if (room_manager.rooms[room_id].num_admins() == 0) { 
+        room_manager.rooms[room_id].add_admin(user_id);	
+      }
       update(room_id);
     }
   });
