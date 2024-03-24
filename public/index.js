@@ -50,6 +50,33 @@ function buildGrid(data, admin, sorted) {
     return grid;
 }
 
+function adjustFontSize() {
+    const gridItems = document.querySelectorAll('.grid-item');
+    let minFontSize = 40;
+
+    gridItems.forEach(item => {
+        let fontSize = minFontSize;
+        item.style.fontSize = `${fontSize}px`;
+
+        while (item.scrollHeight > item.offsetHeight || item.scrollWidth > item.offsetWidth) {
+            fontSize -= 2;
+            item.style.fontSize = `${fontSize}px`;
+        }
+
+        minFontSize = Math.min(minFontSize, fontSize);
+    });
+
+    gridItems.forEach(item => {
+        item.style.fontSize = `${minFontSize-4}px`;
+    });
+
+    
+}
+
+// Call the function when the page loads and when the window resizes
+window.onload = adjustFontSize;
+window.onresize = adjustFontSize;
+
 socket.on('wordlistUpdate', (data) => {
     let options = ''
     data.forEach(list => {
@@ -100,14 +127,9 @@ socket.on('roomUpdate', (data) => {
         let sorted = document.getElementById('sorted').checked;
         let admin = document.getElementById('colors').checked;
         document.getElementById('grid-container').innerHTML = buildGrid(data, admin, sorted);
+        adjustFontSize();
     });
 
-    document.getElementById('wordlist').addEventListener('change', function() {
-        socket.emit('reinitGame', document.getElementById('wordlist').value);
-    });
+    adjustFontSize();
 
 });
-
-function joinRoom() {
-    socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });
-}

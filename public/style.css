@@ -9,18 +9,25 @@
     justify-content: space-between;
 }
 
+#admin-controls {
+    align-items: center;
+}
+
 div.grid-item {
-    width: 19%;
+    width: 18%;
     aspect-ratio: 1;
 
     background-color: #ffffff;
     border: 0.2rem solid #ccc;
     
-    font-size: 0.8rem;
+    font-size: calc(0.5vw + 0.5vh);
 
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
+    padding: 1%;
+    margin: 1%;
 }
 
 div.assassin-revealed {

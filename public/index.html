@@ -17,7 +17,7 @@
 
   <div class="d-flex justify-content-center flex-wrap">
     <div style="width: 600px">
-      <h1 class="p-3">Codenames</h1>
+      <h3 class="m-2">Codenames</h3>
 
       <div class="d-flex flex-wrap">
         <div class="m-2">
@@ -29,13 +29,14 @@
           <input type="text" id="room_id" maxlength="8" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="return /[a-z]/i.test(event.key)" />
         </div>
         <div class="m-2">
-          <button onclick="joinRoom()">join</button>
+          <button onclick="if (confirm('You are about join <' + document.getElementById('room_id').value.toLowerCase() + '> as <' + document.getElementById('user_name').value.toLowerCase() + '>')) socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });">join</button>
         </div>     
       </div>
 
       <hr/>
 
       <div class="hidden m-2 d-flex justify-content-center w-100" id="admin-controls">
+        
         <form id="toggles" class="d-flex">
           <div class="p-2">
             <input type="checkbox" id="colors" name="colors" value="colors" />
@@ -50,6 +51,7 @@
         <form class="p-2">
           <select id="wordlist" name="wordlist">
           </select>
+          <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value);" type="button">re-init</button>
         </form>     
 
       </div>

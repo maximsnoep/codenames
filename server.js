@@ -128,9 +128,10 @@ io.on('connection', (socket) => {
     leave_room()
   });
 
-  socket.on('joinRoom', (dataObject) => {
+  const emojis = ["😂", "🐵", "🦄", "🐙", "🍕", "🚀", "🌵", "👻", "🍍", "🎩", "🐧", "👽", "🐔", "🐲", "🧀", "🍔", "🍿", "🍩", "🍹", "🌍", "🚲", "🏰", "👑", "🔮", "🎮", "🎷", "🐸", "🌈", "⛄", "🎃", "🦁", "🎒", "🍫", "🥑", "🛸", "🧙‍♂️", "🤖", "🐍", "🦜", "🦕", "🍒", "🔥", "🧊", "🛁", "🎲", "🥇", "🚗", "🧩", "🧁", "🍉", "📚", "🎷"];
+  socket.on('joinRoom', (dataObject) => { 
     leave_room();
-    let user_name = dataObject.user_name + "#" + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    let user_name = dataObject.user_name + emojis[Math.floor(Math.random() * emojis.length)];
     join_room(dataObject.room_id.toLowerCase(), user_name.toLowerCase());
   });
 
