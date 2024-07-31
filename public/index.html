@@ -11,9 +11,11 @@
 
 <body style="background-color: #f5f5f5">
 
+  <canvas id="particle-canvas"></canvas>
+
   <script src="/socket.io/socket.io.js"></script>
-  
   <script src="/index.js"></script>
+  <script src="/particles.js"></script>
 
   <div class="d-flex justify-content-center flex-wrap">
     <div style="width: 600px">
@@ -57,7 +59,15 @@
       </div>
 
       <div class="m-2 d-flex justify-content-center">
+        <div id="stats-upper"></div>
+      </div>
+
+      <div class="m-2 d-flex justify-content-center">
         <div class="grid" id="grid-container"></div>
+      </div>
+
+      <div class="m-2 d-flex justify-content-center">
+        <div id="stats-lower"></div>
       </div>
 
       <hr/>

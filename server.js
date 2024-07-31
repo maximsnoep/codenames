@@ -28,7 +28,46 @@ const Game = class {
 
   reveal(id) { this.revealed[id] = true; }
 
+  state() {
+    let assassin = 0;
+    let red = 0;
+    let blue = 0;
+    let neutral = 0;
+    let revealed = 0;
+    for (let i = 0; i < this.revealed.length; i++) {
+      let index = this.coloring.indexOf(i);
+      if (this.revealed[i]) {
+          if (index === 0) {
+              assassin += 1;
+          }
+          if (index >= 1 && index <= 9) {
+              red += 1;
+          }
+          if (index >= 10 && index <= 17) {
+              blue += 1;
+          }
+          if (index >= 18) {
+              neutral += 1;
+          }
+          revealed += 1;
+      }
+    }
+    let assassin_win = assassin == 1;
+    let red_win = red == 9;
+    let blue_win = blue == 8;
+    if (assassin_win && !red_win && !blue_win) {
+      return 0;
+    } else if (red_win && !blue_win && !assassin_win) {
+      return 1;
+    } else if (blue_win && !red_win && !assassin_win) {
+      return 2;
+    } else {    
+      return -1;
+    }
+  }
+
 }
+
 
 const Member = class {
   constructor(name) {
@@ -151,10 +190,21 @@ io.on('connection', (socket) => {
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
       if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
+      let state = room_manager.rooms[room_id].game.state();
       for (const card of cards) {
         room_manager.rooms[room_id].game.reveal(card);
       }
       update(room_id);
+      let new_state = room_manager.rooms[room_id].game.state();
+      if (state == -1) {
+        if (new_state == 0) {
+          io.to(room_id).emit('gameOver', 'assassin');
+        } else if (new_state == 1) {
+          io.to(room_id).emit('gameOver', 'red');
+        } else if (new_state == 2) {
+          io.to(room_id).emit('gameOver', 'blue');
+        }
+      }
     }
   });
 

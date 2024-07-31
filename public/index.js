@@ -44,10 +44,38 @@ function buildGrid(data, admin, sorted) {
         } else {
             card_type = "default"
         }
-        
+
         grid += `<div class="grid-item ${card_type}" id="${i}" onclick="{ socket.emit('revealCards', [${i}]); }"><b>${str}</b></div>`
     }
     return grid;
+}
+
+function getStats(data) {
+    let assassin = 0;
+    let red = 0;
+    let blue = 0;
+    let neutral = 0;
+    let revealed = 0;
+    
+    for (let i = 0; i < data.game.revealed.length; i++) {
+        let index = data.game.coloring.indexOf(i);
+        if (data.game.revealed[i]) {
+            if (index === 0) {
+                assassin += 1;
+            }
+            if (index >= 1 && index <= 9) {
+                red += 1;
+            }
+            if (index >= 10 && index <= 17) {
+                blue += 1;
+            }
+            if (index >= 18) {
+                neutral += 1;
+            }
+            revealed += 1;
+        }
+    }
+    return [`<div style="text-align: center;">${revealed} / 25</div>`, `<div style="text-align: center;">red: ${red} / 9&emsp;blue: ${blue} / 8&emsp;neutral ${neutral} / 7&emsp;assassin: ${assassin} / 1</div>`];
 }
 
 function adjustFontSize() {
@@ -77,6 +105,18 @@ function adjustFontSize() {
 window.onload = adjustFontSize;
 window.onresize = adjustFontSize;
 
+socket.on('gameOver', (data) => {
+    let length = 5;
+    if (data === "assassin") {
+        startWinAnimation('rgb(0, 0, 0, 1.0)', length);
+    } else if (data === "red") {
+        startWinAnimation('rgb(209, 86, 86, 1.0)', length);
+    }
+    else if (data === "blue") {
+        startWinAnimation('rgb(86, 102, 209, 1.0)', length);
+    }
+});
+
 socket.on('wordlistUpdate', (data) => {
     let options = ''
     data.forEach(list => {
@@ -91,6 +131,9 @@ socket.on('roomUpdate', (data) => {
     let sorted = document.getElementById('sorted').checked;
     let admin = document.getElementById('colors').checked;
     document.getElementById('grid-container').innerHTML = buildGrid(data, admin, sorted);
+    let stats = getStats(data);
+    document.getElementById('stats-upper').innerHTML = stats[0];
+    document.getElementById('stats-lower').innerHTML = stats[1];
 
     // show room info
     // make bold for this user
