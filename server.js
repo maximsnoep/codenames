@@ -24,9 +24,24 @@ const Game = class {
     // neutral is coloring[19..25]
     this.coloring = [...Array(25).keys()].sort(() => 0.5 - Math.random());
     this.revealed = Array(25).fill(false);
+    this.current = "red";
   }
 
-  reveal(id) { this.revealed[id] = true; }
+  reveal(id) {
+    let index = this.coloring.indexOf(parseInt(id));
+
+    if (this.current == "red") {
+      if ((index >= 10 && index <= 17) || (index >= 18)) {
+          this.current = "blue";
+      }
+    } else if (this.current == "blue") {
+      if ((index >= 1 && index <= 9) || (index >= 18)) {
+          this.current = "red";
+      }
+    }
+    
+    this.revealed[id] = true;
+  }
 
   state() {
     let assassin = 0;
@@ -52,14 +67,18 @@ const Game = class {
           revealed += 1;
       }
     }
+
     let assassin_win = assassin == 1;
     let red_win = red == 9;
     let blue_win = blue == 8;
     if (assassin_win && !red_win && !blue_win) {
+      this.current = "over";
       return 0;
     } else if (red_win && !blue_win && !assassin_win) {
+      this.current = "over";
       return 1;
     } else if (blue_win && !red_win && !assassin_win) {
+      this.current = "over";
       return 2;
     } else {    
       return -1;
@@ -167,10 +186,9 @@ io.on('connection', (socket) => {
     leave_room()
   });
 
-  const emojis = ["😂", "🐵", "🦄", "🐙", "🍕", "🚀", "🌵", "👻", "🍍", "🎩", "🐧", "👽", "🐔", "🐲", "🧀", "🍔", "🍿", "🍩", "🍹", "🌍", "🚲", "🏰", "👑", "🔮", "🎮", "🎷", "🐸", "🌈", "⛄", "🎃", "🦁", "🎒", "🍫", "🥑", "🛸", "🧙‍♂️", "🤖", "🐍", "🦜", "🦕", "🍒", "🔥", "🧊", "🛁", "🎲", "🥇", "🚗", "🧩", "🧁", "🍉", "📚", "🎷"];
-  socket.on('joinRoom', (dataObject) => { 
+   socket.on('joinRoom', (dataObject) => { 
     leave_room();
-    let user_name = dataObject.user_name + emojis[Math.floor(Math.random() * emojis.length)];
+    let user_name = dataObject.user_name + "-" + Math.floor(Math.random() * 1000);
     join_room(dataObject.room_id.toLowerCase(), user_name.toLowerCase());
   });
 
@@ -194,8 +212,10 @@ io.on('connection', (socket) => {
       for (const card of cards) {
         room_manager.rooms[room_id].game.reveal(card);
       }
-      update(room_id);
       let new_state = room_manager.rooms[room_id].game.state();
+
+      update(room_id);
+      
       if (state == -1) {
         if (new_state == 0) {
           io.to(room_id).emit('gameOver', 'assassin');
@@ -216,4 +236,15 @@ io.on('connection', (socket) => {
       update(room_id);
     }
   });
+
+  socket.on('next', () => {
+    for (const room_id of Object.keys(room_manager.rooms)) {
+      if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
+      if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
+      if (room_manager.rooms[room_id].game.state() != -1) { return }
+      room_manager.rooms[room_id].game.current = room_manager.rooms[room_id].game.current == "red" ? "blue" : "red";
+      update(room_id);
+    }
+  });
+
 });

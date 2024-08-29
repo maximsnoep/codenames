@@ -19,7 +19,7 @@
 
   <div class="d-flex justify-content-center flex-wrap">
     <div style="width: 600px">
-      <h3 class="m-3">Codenames🕵️</h3>
+      <h3 class="m-3">Codenames</h3>
 
       <div class="d-flex flex-wrap">
         <div class="m-2">
@@ -27,7 +27,7 @@
           <input type="text" id="user_name" maxlength="8" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="return /[a-z]/i.test(event.key)" />
         </div>
         <div class="m-2">
-          <label for="room_id">room</label>
+          <label for="room_id">game</label>
           <input type="text" id="room_id" maxlength="8" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="return /[a-z]/i.test(event.key)" />
         </div>
         <div class="m-2">
@@ -39,10 +39,16 @@
 
       <div class="hidden m-2 d-flex justify-content-center w-100" id="admin-controls">
         
+        <form class="d-flex">
+          <div class="p-2">
+            <button onclick="socket.emit('next');" type="button">next</button>
+          </div>
+        </form>
+
         <form id="toggles" class="d-flex">
           <div class="p-2">
             <input type="checkbox" id="colors" name="colors" value="colors" />
-            <label for="colors">colors</label>
+            <label for="colors">colored</label>
           </div>
           <div class="p-2">
             <input type="checkbox" id="sorted" name="sorted" value="sorted" />
@@ -50,10 +56,14 @@
           </div>
         </form>
 
-        <form class="p-2">
-          <select id="wordlist" name="wordlist">
-          </select>
-          <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value);" type="button">re-init</button>
+        <form class="d-flex">
+          <div class="p-2">
+            <select id="wordlist" name="wordlist" style="padding-bottom:-3px;">
+            </select>
+          </div>
+          <div class="p-2">
+            <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value);" type="button">reset</button>
+          </div>
         </form>     
 
       </div>

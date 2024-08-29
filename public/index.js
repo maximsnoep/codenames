@@ -2,10 +2,10 @@ const socket = io();
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
-    const characters = ["Johnny", "Lisa", "Mark", "Denny", "Michelle", "Chris-R", "Steven", "Claudette", "Mike", "Peter", "Florist", "Doggy"];
+    const characters = ["mark"];
     let randomCharacter = characters[Math.floor(Math.random() * characters.length)];
     // set default room and user
-    document.getElementById('room_id').value = "rooftop";
+    document.getElementById('room_id').value = "room";
     document.getElementById('user_name').value = randomCharacter;
 });
 
@@ -45,9 +45,24 @@ function buildGrid(data, admin, sorted) {
             card_type = "default"
         }
 
-        grid += `<div class="grid-item ${card_type}" id="${i}" onclick="{ socket.emit('revealCards', [${i}]); }"><b>${str}</b></div>`
+        grid += `<div class="grid-item ${card_type}" id="${i}"><b>${str}</b></div>`
     }
-    return grid;
+
+    document.getElementById('grid-container').innerHTML = grid;
+
+    // reveal card upon click
+    Array.from(document.getElementsByClassName("grid-item")).forEach((c) => {
+        c.addEventListener('click', () => { 
+            if (c.getAttribute("highlighted") != null) {
+                Array.from(document.getElementsByClassName("grid-item")).forEach((o) => { o.removeAttribute("highlighted"); });
+                socket.emit('revealCards', [c.id]);
+            } else {
+                Array.from(document.getElementsByClassName("grid-item")).forEach((o) => { o.removeAttribute("highlighted"); });
+                c.setAttribute("highlighted", "");
+            }
+        });
+    });
+    
 }
 
 function getStats(data) {
@@ -75,7 +90,7 @@ function getStats(data) {
             revealed += 1;
         }
     }
-    return [`<div style="text-align: center;">${revealed} / 25</div>`, `<div style="text-align: center;">red: ${red} / 9&emsp;blue: ${blue} / 8&emsp;neutral ${neutral} / 7&emsp;assassin: ${assassin} / 1</div>`];
+    return `<div style="text-align: center;"><span class="circle red-revealed">${9-red}</span>&emsp;<span class="circle blue-revealed">${8-blue}</span>&emsp;<span class="circle innocent-revealed">${7-neutral}</span>&emsp;<span class="circle assassin-revealed">${1-assassin}</span></div>`;
 }
 
 function adjustFontSize() {
@@ -130,10 +145,16 @@ socket.on('roomUpdate', (data) => {
     // show grid
     let sorted = document.getElementById('sorted').checked;
     let admin = document.getElementById('colors').checked;
-    document.getElementById('grid-container').innerHTML = buildGrid(data, admin, sorted);
-    let stats = getStats(data);
-    document.getElementById('stats-upper').innerHTML = stats[0];
-    document.getElementById('stats-lower').innerHTML = stats[1];
+    buildGrid(data, admin, sorted);
+    document.getElementById('stats-lower').innerHTML = getStats(data);
+
+    if (data.game.current == "red") {
+        document.body.style.backgroundColor = "#ffe9e9";
+    } else if (data.game.current == "blue") {
+        document.body.style.backgroundColor = "#e6eaff";
+    } else {
+        document.body.style.backgroundColor = "#f5f5f5";
+    }
 
     // show room info
     // make bold for this user
@@ -148,11 +169,6 @@ socket.on('roomUpdate', (data) => {
         }
     }
     document.getElementById('room_info').innerHTML = `<b><u>${data.id}</u></b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
-
-    // reveal card upon click
-    Array.from(document.getElementsByClassName("grid-item")).forEach((c) => {
-        c.addEventListener('click', () => { socket.emit('revealCards', [c.id]); });
-    });
 
     // make admin upon click
     Array.from(document.getElementsByClassName("member-item")).forEach((m) => {
@@ -169,7 +185,7 @@ socket.on('roomUpdate', (data) => {
     document.getElementById('toggles').addEventListener('change', function() {
         let sorted = document.getElementById('sorted').checked;
         let admin = document.getElementById('colors').checked;
-        document.getElementById('grid-container').innerHTML = buildGrid(data, admin, sorted);
+        buildGrid(data, admin, sorted);
         adjustFontSize();
     });
 

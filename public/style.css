@@ -1,8 +1,16 @@
+body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 .grid {
     width: 80vw;
     max-width: 50rem;
     aspect-ratio: 1;
-
     display: flex;
     flex-wrap: wrap;
     align-content: space-between;
@@ -30,43 +38,62 @@ div.grid-item {
     margin: 1%;
 }
 
-div.assassin-revealed {
-    background-color: #242424;
-    color: #ffffff;
+div.grid-item[highlighted] {
+    animation: pulsate 1.5s infinite;
 }
 
-div.assassin-unrevealed {
-    border-color: #242424;
-    background-color: #c0c0c0;
+@keyframes pulsate {
+    0% {
+        scale: 1;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        scale: 1.02;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+    }
+    100% {
+        scale: 1;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
 }
 
-div.red-revealed {
-    background-color: #d15656;
-    color: #ffffff;
+.assassin-revealed {
+    background-color: #242424 !important;
+    color: #ffffff !important;
 }
 
-div.red-unrevealed {
-    border-color: #d15656;
-    background-color: #ffe9e9;
+.assassin-unrevealed {
+    border-color: #242424 !important;
+    background-color: #c0c0c0 !important;
 }
 
-div.blue-revealed {
-    background-color: #5666d1;
-    color: #ffffff;
+.red-revealed {
+    background-color: #d15656 !important;
+    color: #ffffff !important;
 }
 
-div.blue-unrevealed {
-    border-color: #5666d1;
-    background-color: #e6eaff;
+.red-unrevealed {
+    border-color: #d15656 !important;
+    background-color: #ffe9e9 !important;
 }
 
-div.innocent-revealed {
-    background-color: #8c8c8c;
-    color: #ffffff;
+.blue-revealed {
+    background-color: #5666d1 !important;
+    color: #ffffff !important;
 }
 
-div.innocent-unrevealed {
-    border-color: #8c8c8c;
+.blue-unrevealed {
+    border-color: #5666d1 !important;
+    background-color: #e6eaff !important;
+}
+
+.innocent-revealed {
+    background-color: #8c8c8c !important;
+    color: #ffffff !important;
+}
+
+.innocent-unrevealed {
+    border-color: #8c8c8c !important;
 }
 
 .hidden {
@@ -89,4 +116,12 @@ canvas {
     height: 100%;
     z-index: 1;
     pointer-events:none;
+}
+
+.circle {
+    display: inline-block;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    padding-top: 0.2em;
 }
