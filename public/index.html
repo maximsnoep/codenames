@@ -39,29 +39,29 @@
 
       <div class="hidden m-2 d-flex justify-content-center w-100" id="admin-controls">
         
-        <form class="d-flex">
-          <div class="p-2">
+        <form class="p-2 d-flex flex-column">
+          <div>
             <button onclick="socket.emit('next');" type="button">next</button>
           </div>
         </form>
 
-        <form id="toggles" class="d-flex">
-          <div class="p-2">
+        <form id="toggles" class="p-2 d-flex flex-column">
+          <div>
             <input type="checkbox" id="colors" name="colors" value="colors" />
             <label for="colors">colored</label>
           </div>
-          <div class="p-2">
+          <div>
             <input type="checkbox" id="sorted" name="sorted" value="sorted" />
             <label for="sorted">sorted</label>
           </div>
         </form>
 
-        <form class="d-flex">
-          <div class="p-2">
+        <form class="p-2 d-flex flex-column">
+          <div>
             <select id="wordlist" name="wordlist" style="padding-bottom:-3px;">
             </select>
           </div>
-          <div class="p-2">
+          <div>
             <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value);" type="button">reset</button>
           </div>
         </form>     

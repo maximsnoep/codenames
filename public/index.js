@@ -135,7 +135,11 @@ socket.on('gameOver', (data) => {
 socket.on('wordlistUpdate', (data) => {
     let options = ''
     data.forEach(list => {
-        options += `<option value="${list}">${list}</option>`
+        if (list === "original") {
+            options += `<option value="${list}" selected>${list}</option>`
+        } else {
+            options += `<option value="${list}">${list}</option>`
+        }
     });
     document.getElementById('wordlist').innerHTML = options;
 });
@@ -158,17 +162,21 @@ socket.on('roomUpdate', (data) => {
 
     // show room info
     // make bold for this user
-    let admins = [];
+    // make underline for admin
     let members = [];
     for (const [id, member] of Object.entries(data.members)) {
-        let m = `<span class="member-item" id="${id}" style="font-weight: ${id === socket.id ? "bold" : "normal"}" >${member.name}</span>`;
-        if (member.admin) {
-            admins.push(m);
-        } else {
-            members.push(m);
+        let bold = "";
+        let underline = "";
+        if (id == socket.id) {
+            bold = "font-weight: bold;";
         }
+        if (member.admin) {
+            underline = "text-decoration: underline;";  
+        }
+        let m = `<span class="member-item" id="${id}" style="${bold}${underline}">${member.name}</span>`;
+        members.push(m);
     }
-    document.getElementById('room_info').innerHTML = `<b><u>${data.id}</u></b><br/>admins: ${admins.join(', ')}<br/>others: ${members.join(', ')}</span>`;
+    document.getElementById('room_info').innerHTML = `${data.id}: ${members.join(', ')}`;
 
     // make admin upon click
     Array.from(document.getElementsByClassName("member-item")).forEach((m) => {
