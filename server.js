@@ -209,6 +209,7 @@ io.on('connection', (socket) => {
       if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
       if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
       let state = room_manager.rooms[room_id].game.state();
+      let current = room_manager.rooms[room_id].game.current;
       for (const card of cards) {
         room_manager.rooms[room_id].game.reveal(card);
       }
@@ -217,8 +218,10 @@ io.on('connection', (socket) => {
       update(room_id);
       
       if (state == -1) {
-        if (new_state == 0) {
-          io.to(room_id).emit('gameOver', 'assassin');
+        if (new_state == 0 && current == "red") {
+          io.to(room_id).emit('gameOver', 'blue-assassin');
+        } else if (new_state == 0 && current == "blue") {
+          io.to(room_id).emit('gameOver', 'red-assassin');
         } else if (new_state == 1) {
           io.to(room_id).emit('gameOver', 'red');
         } else if (new_state == 2) {

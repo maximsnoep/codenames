@@ -110,11 +110,29 @@ function adjustFontSize() {
     });
 
     gridItems.forEach(item => {
-        item.style.fontSize = `${minFontSize-4}px`;
+        item.style.fontSize = `${minFontSize-2}px`;
     });
 
     
 }
+
+let toggle_var = false;
+function toggle() {
+    if (toggle_var) {
+        // for all in document.getElementsByClassName('toggleable'), set display to 'none'
+        Array.from(document.getElementsByClassName('toggleable')).forEach((o) => { o.style.display = 'none'; Array.from(o.querySelectorAll("*")).forEach((c) => { c.style.display = 'none' }); });
+        document.getElementById('grid-wrapper').style.height = '85vh';
+        toggle_var = false;
+    }
+    else {
+        // for all in document.getElementsByClassName('toggleable'), set display to ''
+        Array.from(document.getElementsByClassName('toggleable')).forEach((o) => { o.style.display = ''; Array.from(o.querySelectorAll("*")).forEach((c) => { c.style.display = '' }); });
+        document.getElementById('grid-wrapper').style.height = '60vh';
+        toggle_var = true;
+    }
+    adjustFontSize();
+}
+
 
 // Call the function when the page loads and when the window resizes
 window.onload = adjustFontSize;
@@ -122,8 +140,12 @@ window.onresize = adjustFontSize;
 
 socket.on('gameOver', (data) => {
     let length = 5;
-    if (data === "assassin") {
+    if (data === "red-assassin") {
         startWinAnimation('rgb(0, 0, 0, 1.0)', length);
+        startWinAnimation('rgb(209, 86, 86, 1.0)', length);
+    } else if (data === "blue-assassin") {
+        startWinAnimation('rgb(0, 0, 0, 1.0)', length);
+        startWinAnimation('rgb(86, 102, 209, 1.0)', length);
     } else if (data === "red") {
         startWinAnimation('rgb(209, 86, 86, 1.0)', length);
     }
