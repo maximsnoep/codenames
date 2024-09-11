@@ -112,22 +112,20 @@ function adjustFontSize() {
     gridItems.forEach(item => {
         item.style.fontSize = `${minFontSize-2}px`;
     });
-
-    
 }
 
 let toggle_var = false;
 function toggle() {
     if (toggle_var) {
         // for all in document.getElementsByClassName('toggleable'), set display to 'none'
-        Array.from(document.getElementsByClassName('toggleable')).forEach((o) => { o.style.display = 'none'; Array.from(o.querySelectorAll("*")).forEach((c) => { c.style.display = 'none' }); });
-        document.getElementById('grid-wrapper').style.height = '85vh';
+        Array.from(document.getElementsByClassName('toggleable')).forEach((o) => { o.style.old_display = o.style.display; o.style.display = 'none'; Array.from(o.querySelectorAll("*")).forEach((c) => { c.style.old_display = c.style.display; c.style.display = 'none' }); });
+        document.getElementById('grid-container').style.height = '94vmin';
         toggle_var = false;
     }
     else {
         // for all in document.getElementsByClassName('toggleable'), set display to ''
-        Array.from(document.getElementsByClassName('toggleable')).forEach((o) => { o.style.display = ''; Array.from(o.querySelectorAll("*")).forEach((c) => { c.style.display = '' }); });
-        document.getElementById('grid-wrapper').style.height = '60vh';
+        Array.from(document.getElementsByClassName('toggleable')).forEach((o) => { o.style.display = o.style.old_display; Array.from(o.querySelectorAll("*")).forEach((c) => { c.style.display = c.style.old_display }); });
+        document.getElementById('grid-container').style.height = '70vmin';
         toggle_var = true;
     }
     adjustFontSize();
@@ -212,10 +210,13 @@ socket.on('roomUpdate', (data) => {
         document.getElementById('admin-controls').classList.add('hidden');
     }
 
-    document.getElementById('toggles').addEventListener('change', function() {
-        let sorted = document.getElementById('sorted').checked;
-        let admin = document.getElementById('colors').checked;
-        buildGrid(data, admin, sorted);
+    document.getElementById('sorted').addEventListener('change', function() {
+        buildGrid(data, document.getElementById('colors').checked, document.getElementById('sorted').checked);
+        adjustFontSize();
+    });
+
+    document.getElementById('colors').addEventListener('change', function() {
+        buildGrid(data, document.getElementById('colors').checked, document.getElementById('sorted').checked);
         adjustFontSize();
     });
 

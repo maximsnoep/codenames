@@ -7,31 +7,12 @@ body {
     user-select: none;
 }
 
-.grid {
-    aspect-ratio: 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: space-between;
-    justify-content: space-between;
-}
-
-#admin-controls {
-    align-items: center;
-}
-
 div.grid-item {
-    height: 18%;
-    aspect-ratio: 1;
-
     background-color: #ffffff;
-    border: 0.2rem solid #ccc;
-
+    border: 2px solid #ccc;
     display: flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
-    padding: 1%;
-    margin: 1%;
 }
 
 div.grid-item[highlighted] {
@@ -94,10 +75,6 @@ div.grid-item[highlighted] {
 
 .hidden {
     display: none !important;
-}
-
-details > div {
-    z-index: 10;
 }
 
 input[type="text"] {
