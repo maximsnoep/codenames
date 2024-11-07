@@ -95,10 +95,10 @@ function getStats(data) {
 
 function adjustFontSize() {
     const gridItems = document.querySelectorAll('.grid-item');
-    let minFontSize = 40;
+    let maxFontSize = 40;
 
     gridItems.forEach(item => {
-        let fontSize = minFontSize;
+        let fontSize = maxFontSize;
         item.style.fontSize = `${fontSize}px`;
 
         while (item.scrollHeight > item.offsetHeight || item.scrollWidth > item.offsetWidth) {
@@ -106,11 +106,11 @@ function adjustFontSize() {
             item.style.fontSize = `${fontSize}px`;
         }
 
-        minFontSize = Math.min(minFontSize, fontSize);
+        maxFontSize = Math.min(maxFontSize, fontSize);
     });
 
     gridItems.forEach(item => {
-        item.style.fontSize = `${minFontSize-2}px`;
+        item.style.fontSize = `${maxFontSize-6}px`;
     });
 }
 
