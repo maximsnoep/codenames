@@ -144,21 +144,19 @@ io.on('connection', (socket) => {
   let currentID = null;
   let is_connected = true;
 
-  console.log(`A socket [${socket.id}] connected.`);
-
-  console.log("current ids: " + currentIDS);
+  console.log(`A new connection appeared! (socket: ${socket.id}).`);
   
   socket.on('register', function (data) {
       if (data !== null && (currentIDS.includes(parseInt(data)))) {
           currentID = parseInt(data);
-          console.log(`A socket [${socket.id}] reconnected with ID [${currentID}].`);
+          console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
       } else {
           currentID = Math.floor(Math.random() * 1000000);
           while (currentIDS.includes(currentID)) {
               currentID = Math.floor(Math.random() * 1000000);
           }
           currentIDS.push(currentID);
-          console.log(`A socket [${socket.id}] registered with ID [${currentID}].`);
+          console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
       }
       io.to(socket.id).emit('register', currentID);
 
@@ -201,7 +199,7 @@ io.on('connection', (socket) => {
   function leave_room() {
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (room_manager.rooms[room_id].is_member(currentID)) {
-        console.log(`<${currentID}> left <${room_id}>`);
+        console.log(`${currentID} left <${room_id}>`);
         room_manager.rooms[room_id].del_member(currentID);
         if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
           room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
