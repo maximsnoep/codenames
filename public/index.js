@@ -1,11 +1,11 @@
 const socket = io();
-let currentID = localStorage.getItem('uUID');
+let currentID = localStorage.getItem('codenames_user_id');
 
 socket.emit("register", currentID);
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
-    const characters = ["mark", "johnny", "lisa", "denny", "michelle", "chris-r", "steven", "peter", "claudette", "mike", "michelle", "doggy", "steven"];
+    const characters = ["name"];
     let randomCharacter = characters[Math.floor(Math.random() * characters.length)];
     // set default room and user
     document.getElementById('room_id').value = "room";
@@ -138,6 +138,9 @@ function toggle() {
 // Call the function when the page loads and when the window resizes
 window.onload = adjustFontSize;
 window.onresize = adjustFontSize;
+window.addEventListener("orientationchange", (event) => {
+    adjustFontSize
+  });
 
 socket.on('gameOver', (data) => {
     let length = 5;
@@ -229,5 +232,5 @@ socket.on('roomUpdate', (data) => {
 
 socket.on("register", (data) => {
     currentID = data;
-    localStorage.setItem('uUID', currentID);
+    localStorage.setItem('codenames_user_id', currentID);
 });

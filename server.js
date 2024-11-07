@@ -216,10 +216,11 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     setTimeout(function () {
         if (!is_connected) {
+          is_connected = false;
           leave_room();
           currentIDS.pop(currentID);
         }
-    }, 15000);
+    }, 60 * 1000);
   });
 
    socket.on('joinRoom', (dataObject) => { 
