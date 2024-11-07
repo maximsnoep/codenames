@@ -137,10 +137,41 @@ const RoomManager = class {
 }
 
 const room_manager = new RoomManager();
+const currentIDS = [];
 
 io.on('connection', (socket) => {
 
+  let currentID = null;
+  let is_connected = true;
+
   console.log(`A socket [${socket.id}] connected.`);
+
+  console.log("current ids: " + currentIDS);
+  
+  socket.on('register', function (data) {
+      if (data !== null && (currentIDS.includes(parseInt(data)))) {
+          currentID = parseInt(data);
+          console.log(`A socket [${socket.id}] reconnected with ID [${currentID}].`);
+      } else {
+          currentID = Math.floor(Math.random() * 1000000);
+          while (currentIDS.includes(currentID)) {
+              currentID = Math.floor(Math.random() * 1000000);
+          }
+          currentIDS.push(currentID);
+          console.log(`A socket [${socket.id}] registered with ID [${currentID}].`);
+      }
+      io.to(socket.id).emit('register', currentID);
+
+      for (const room_id of Object.keys(room_manager.rooms)) {
+        if (room_manager.is_member_in_room(currentID, room_id)) {
+          socket.join(room_id);
+          update(room_id);
+          break;
+        }
+      }
+
+
+  });
 
   let files = fs.readdirSync('./public/wordlists/');
   files = files.map(f => path.parse(f).name);
@@ -154,13 +185,13 @@ io.on('connection', (socket) => {
     if (!room_id || !user_name) return;
 
     if (!room_manager.is_room(room_id)) {
-      console.log(`${socket.id} (${user_name}) created <${room_id}>`);
+      console.log(`${currentID} (${user_name}) created <${room_id}>`);
       room_manager.rooms[room_id] = new Room(room_id);
-      room_manager.rooms[room_id].add_member(socket.id, new Member(user_name));
-      room_manager.rooms[room_id].add_admin(socket.id);
+      room_manager.rooms[room_id].add_member(currentID, new Member(user_name));
+      room_manager.rooms[room_id].add_admin(currentID);
     } else {
-      console.log(`${socket.id} (${user_name}) joined <${room_id}>`);
-      room_manager.rooms[room_id].add_member(socket.id, new Member(user_name));
+      console.log(`${currentID} (${user_name}) joined <${room_id}>`);
+      room_manager.rooms[room_id].add_member(currentID, new Member(user_name));
     }
 
     socket.join(room_id);
@@ -169,9 +200,9 @@ io.on('connection', (socket) => {
 
   function leave_room() {
     for (const room_id of Object.keys(room_manager.rooms)) {
-      if (room_manager.rooms[room_id].is_member(socket.id)) {
-        console.log(`<${socket.id}> left <${room_id}>`);
-        room_manager.rooms[room_id].del_member(socket.id);
+      if (room_manager.rooms[room_id].is_member(currentID)) {
+        console.log(`<${currentID}> left <${room_id}>`);
+        room_manager.rooms[room_id].del_member(currentID);
         if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
           room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
         }
@@ -183,7 +214,12 @@ io.on('connection', (socket) => {
   }
 
   socket.on('disconnect', () => {
-    leave_room()
+    setTimeout(function () {
+        if (!is_connected) {
+          leave_room();
+          currentIDS.pop(currentID);
+        }
+    }, 15000);
   });
 
    socket.on('joinRoom', (dataObject) => { 
@@ -194,8 +230,8 @@ io.on('connection', (socket) => {
 
   socket.on('toggleAdmin', (user_id) => {
     for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
-      if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
+      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
+      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
       room_manager.rooms[room_id].members[user_id].admin = !room_manager.rooms[room_id].members[user_id].admin;
       if (room_manager.rooms[room_id].num_admins() == 0) { 
         room_manager.rooms[room_id].add_admin(user_id);	
@@ -206,8 +242,8 @@ io.on('connection', (socket) => {
 
   socket.on('revealCards', (cards) => {
     for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
-      if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
+      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
+      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
       let state = room_manager.rooms[room_id].game.state();
       let current = room_manager.rooms[room_id].game.current;
       for (const card of cards) {
@@ -233,8 +269,8 @@ io.on('connection', (socket) => {
 
   socket.on('reinitGame', (wordList) => {
     for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
-      if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
+      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
+      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
       room_manager.rooms[room_id].game = new Game(wordList);
       update(room_id);
     }
@@ -242,8 +278,8 @@ io.on('connection', (socket) => {
 
   socket.on('next', () => {
     for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(socket.id, room_id)) { return }
-      if (!room_manager.is_admin_in_room(socket.id, room_id)) { return }
+      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
+      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
       if (room_manager.rooms[room_id].game.state() != -1) { return }
       room_manager.rooms[room_id].game.current = room_manager.rooms[room_id].game.current == "red" ? "blue" : "red";
       update(room_id);

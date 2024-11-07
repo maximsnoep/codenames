@@ -15,10 +15,6 @@
     <script src="/index.js"></script>
     <script src="/particles.js"></script>
 
-    <span style="position: absolute; top: 5px; right: 10px; font-size: 1rem" onclick="toggle()">
-      &#x26F6;
-    </span>
-
     <div style="display: grid; align-items: center; text-align: center; grid-template-rows: auto auto auto; min-height: 100%; min-width: 100%">
 
       <div class="toggleable" style="align-self: center; justify-self: center;">
@@ -42,9 +38,6 @@
 
         <div class="hidden" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;" id="admin-controls">
           <div style="padding: 0 0.5rem;">
-            <button onclick="socket.emit('next');">next</button>
-          </div>
-          <div style="padding: 0 0.5rem;">
             <input type="checkbox" id="colors" value="colors" />
             <label for="colors">colored</label>
           </div>
@@ -64,6 +57,16 @@
         <div id="grid-container" style="height: 70vmin; width: 100%; padding: 0.5rem; display: grid; grid-template-columns: repeat(5, 19%); grid-template-rows: repeat(5, 19%); gap: 1%;"></div>
         <div id="stats-lower" style="padding: 0.5rem;"></div>
       </div>
+
+      <div style="position: absolute; bottom: 0; left: 0; margin: 20px;">
+        <button onclick="socket.emit('next');">next</button>
+      </div>
+
+      <div style="position: absolute; bottom: 0; right: 0; margin: 20px;">
+        <button style="font-size: 1rem" onclick="toggle()">
+          &#x26F6;
+        </button>
+      </div>  
 
       <div class="toggleable" style="align-self: center; justify-self: center;">
         <hr style="width: 90vw;"/>
