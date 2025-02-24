@@ -15,8 +15,8 @@
     <script src="/index.js"></script>
     <script src="/particles.js"></script>
 
-    <div style="position: fixed; bottom: 0; left: 0; margin: 20px;">
-      <button onclick="socket.emit('next');">next</button>
+    <div class="hidden admin-controls" style="position: fixed; bottom: 0; left: 0; margin: 20px;">
+      <button onclick="socket.emit('next');">pass</button>
     </div>
 
     <div style="position: fixed; bottom: 0; right: 0; margin: 20px;">
@@ -24,6 +24,41 @@
         &#x26F6;
       </button>
     </div>  
+
+    <div style="position: fixed; top: 0; left: 0; margin: 20px;">
+      <span style="cursor: pointer; z-index: 100;" onmouseover="this.nextElementSibling.style.display='block'" onmouseout="this.nextElementSibling.style.display='none'">&#9432;</span>
+      <div style="display: none; position: fixed; top: 0; left: 0; margin: 20px; z-index: 99; background-color: #f5f5f5; padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem;">
+        <p><strong>Rules:</strong><br>
+          - Two teams: Red and Blue. Each has a Spymaster and guessers.<br>
+          - Spymasters see all card colors; guessers do not.<br>
+          - Spymasters give a one-word clue and a number, indicating how many words relate.<br>
+          - The number "Infinity" means the guessers should be able to finish the game.<br>
+          - Guessers try to find their words, up to the number +1 (they may retry missed words).<br>
+          - Correct guesses continue the turn.<br>
+          - Wrong guesses (neutral or opposing words) end the turn.<br>
+          - Guessing the assassin (black) loses the game instantly.<br>
+          - Red must find 9 words, Blue must find 8 to win.<br>
+          - Teams may pass instead of guessing.<br>
+          - The first team to find all their words wins.<br>
+        </p>
+        
+        <p><strong>Controls:</strong><br>
+          - Join a game by entering a user name and game room.<br>
+          - The first player to join becomes the admin.<br>
+          - In the user list, your name is bold, and admins are underlined.<br>
+          - Admins can promote/demote players by clicking their name.<br>
+          - Admins can reset the game and change the wordlist.<br>
+          - Admins can see and sort card colors (only on their screen).<br>
+          - Admins reveal a card's color by clicking it twice.<br>
+          - Admins click "pass" to advance to the next turn.<br>
+          - Turns automatically pass after an incorrect guess.<br>
+          - The screen background shows the current team's turn.<br>
+        </p>
+
+
+      </div>
+    </div>
+
 
     <div style="display: grid; align-items: center; text-align: center; grid-template-rows: auto auto auto; min-height: 100%; min-width: 100%">
 
@@ -44,9 +79,8 @@
           </div>     
         </div>
 
-        <hr style="width: 90vw;"/>
-
-        <div class="hidden" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;" id="admin-controls">
+        <br>
+        <div class="hidden admin-controls" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
           <div style="padding: 0 0.5rem;">
             <input type="checkbox" id="colors" value="colors" />
             <label for="colors">colored</label>
@@ -69,7 +103,7 @@
       </div>
 
       <div class="toggleable" style="align-self: center; justify-self: center;">
-        <hr style="width: 90vw;"/>
+        <br>
         <div style="padding: 0.5rem;">
           <span id="room_info"></span>
         </div>

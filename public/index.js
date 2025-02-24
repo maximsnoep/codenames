@@ -1,6 +1,5 @@
 const socket = io();
 let currentID = localStorage.getItem('codenames_user_id');
-
 socket.emit("register", currentID);
 
 // choose random character from the cast of The Room (2003)
@@ -168,6 +167,7 @@ socket.on('wordlistUpdate', (data) => {
         }
     });
     document.getElementById('wordlist').innerHTML = options;
+    adjustFontSize();
 });
 
 socket.on('roomUpdate', (data) => {
@@ -211,9 +211,9 @@ socket.on('roomUpdate', (data) => {
 
     // show admin controls
     if (data.members[currentID].admin) {
-        document.getElementById('admin-controls').classList.remove('hidden');
+        Array.from(document.getElementsByClassName('admin-controls')).forEach((o) => { o.classList.remove('hidden'); });
     } else {
-        document.getElementById('admin-controls').classList.add('hidden');
+        Array.from(document.getElementsByClassName('admin-controls')).forEach((o) => { o.classList.add('hidden'); });
     }
 
     document.getElementById('sorted').addEventListener('change', function() {

@@ -218,7 +218,7 @@ io.on('connection', (socket) => {
           leave_room();
           currentIDS.pop(currentID);
         }
-    }, 60 * 1000);
+    }, 1 * 60 * 1000);
   });
 
    socket.on('joinRoom', (dataObject) => { 
