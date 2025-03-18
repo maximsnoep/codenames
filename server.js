@@ -183,12 +183,12 @@ io.on('connection', (socket) => {
     if (!room_id || !user_name) return;
 
     if (!room_manager.is_room(room_id)) {
-      console.log(`${currentID} (${user_name}) created <${room_id}>`);
+      console.log(`${currentID} created <${room_id}>`);
       room_manager.rooms[room_id] = new Room(room_id);
       room_manager.rooms[room_id].add_member(currentID, new Member(user_name));
       room_manager.rooms[room_id].add_admin(currentID);
     } else {
-      console.log(`${currentID} (${user_name}) joined <${room_id}>`);
+      console.log(`${currentID} joined <${room_id}>`);
       room_manager.rooms[room_id].add_member(currentID, new Member(user_name));
     }
 
@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
   function leave_room() {
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (room_manager.rooms[room_id].is_member(currentID)) {
-        console.log(`${currentID} (${user_name})  left <${room_id}>`);
+        console.log(`${currentID} left <${room_id}>`);
         room_manager.rooms[room_id].del_member(currentID);
         if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
           room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
@@ -240,7 +240,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('revealCards', (cards) => {
-    console.log(`${currentID} (${user_name}) revealed cards: ${cards}`);
+    console.log(`${currentID} revealed cards: ${cards}`);
 
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (!room_manager.is_member_in_room(currentID, room_id)) { return }
