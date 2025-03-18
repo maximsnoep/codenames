@@ -151,9 +151,9 @@ io.on('connection', (socket) => {
           currentID = parseInt(data);
           console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
       } else {
-          currentID = Math.floor(Math.random() * 1000000);
+          currentID = 1000 + Math.floor(Math.random() * 8999);
           while (currentIDS.includes(currentID)) {
-              currentID = Math.floor(Math.random() * 1000000);
+              currentID = 1000 + Math.floor(Math.random() * 8999);
           }
           currentIDS.push(currentID);
           console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
   function leave_room() {
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (room_manager.rooms[room_id].is_member(currentID)) {
-        console.log(`${currentID} left <${room_id}>`);
+        console.log(`${currentID} (${user_name})  left <${room_id}>`);
         room_manager.rooms[room_id].del_member(currentID);
         if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
           room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
@@ -223,7 +223,7 @@ io.on('connection', (socket) => {
 
    socket.on('joinRoom', (dataObject) => { 
     leave_room();
-    let user_name = dataObject.user_name + "-" + Math.floor(Math.random() * 1000);
+    let user_name = dataObject.user_name + "(" + currentID + ")";
     join_room(dataObject.room_id.toLowerCase(), user_name.toLowerCase());
   });
 
@@ -240,6 +240,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('revealCards', (cards) => {
+    console.log(`${currentID} (${user_name}) revealed cards: ${cards}`);
+
     for (const room_id of Object.keys(room_manager.rooms)) {
       if (!room_manager.is_member_in_room(currentID, room_id)) { return }
       if (!room_manager.is_admin_in_room(currentID, room_id)) { return }

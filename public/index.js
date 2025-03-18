@@ -4,11 +4,9 @@ socket.emit("register", currentID);
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
-    const characters = ["name"];
-    let randomCharacter = characters[Math.floor(Math.random() * characters.length)];
     // set default room and user
-    document.getElementById('room_id').value = "room";
-    document.getElementById('user_name').value = randomCharacter;
+    document.getElementById('room_id').value = "theroom";
+    document.getElementById('user_name').value = "mark";
 });
 
 function buildGrid(data, admin, sorted) {
