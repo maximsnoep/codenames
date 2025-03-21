@@ -146,10 +146,9 @@ const RoomManager = class {
 }
 
 const CHECK_INTERVAL = 1; // 1 seconds
-const TIMEOUT_LIMIT = 2; // Number of missed pings before kicking
+const TIMEOUT_LIMIT = 30; // Number of missed pings before kicking
 
 const room_manager = new RoomManager();
-const currentIDS = [];
 const activeUsers = {}; // Track { userID: { socketID, missedPings } }
 
 io.on('connection', (socket) => {
@@ -159,15 +158,14 @@ io.on('connection', (socket) => {
   console.log(`A new connection appeared! (socket: ${socket.id}).`);
   
   socket.on('register', function (data) {
-    if (data !== null && (currentIDS.includes(parseInt(data)))) {
+    if (data !== null && (activeUsers.includes(parseInt(data)))) {
         currentID = parseInt(data);
         console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
     } else {
         currentID = 1000 + Math.floor(Math.random() * 8999);
-        while (currentIDS.includes(currentID)) {
+        while (activeUsers.includes(currentID)) {
             currentID = 1000 + Math.floor(Math.random() * 8999);
         }
-        currentIDS.push(currentID);
         console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
     }
 
@@ -234,20 +232,18 @@ io.on('connection', (socket) => {
     Object.keys(activeUsers).forEach((userID) => {
         if (activeUsers[userID]) {
             activeUsers[userID].missedPings += 1;
-
+            console.log(`User ${userID} missed ${activeUsers[userID].missedPings} pings.`);
             if (activeUsers[userID].missedPings >= TIMEOUT_LIMIT) {
                 console.log(`User ${userID} removed due to inactivity.`);
                 leave_room(userID);
                 delete activeUsers[userID];
-                currentIDS.splice(currentIDS.indexOf(parseInt(userID)), 1);
             } else {
                 io.to(activeUsers[userID].socketID).emit('ping'); // Ask for response
             }
         }
     });
-  }, CHECK_INTERVAL);
+  }, CHECK_INTERVAL * 1000);
 
-  let timeout = 1;
   socket.on('disconnect', () => {
     console.log(`A connection disappeared! (socket: ${socket.id}, id: ${currentID}).`);
   });
