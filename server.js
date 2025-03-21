@@ -162,23 +162,25 @@ io.on('connection', (socket) => {
   console.log(`A new connection appeared! (socket: ${socket.id}).`);
   
   socket.on('register', function (data) {
-      if (data !== null && (currentIDS.includes(parseInt(data)))) {
-          currentID = parseInt(data);
-          console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
-      } else {
-          currentID = 1000 + Math.floor(Math.random() * 8999);
-          while (currentIDS.includes(currentID)) {
-              currentID = 1000 + Math.floor(Math.random() * 8999);
-          }
-          currentIDS.push(currentID);
-          console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
-      }
-      io.to(socket.id).emit('register', currentID);
+    is_connected = true;
 
-      for (const room_id of room_manager.rooms_of_user(currentID)) {
-        socket.join(room_id);
-        update(room_id);
-      }
+    if (data !== null && (currentIDS.includes(parseInt(data)))) {
+        currentID = parseInt(data);
+        console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
+    } else {
+        currentID = 1000 + Math.floor(Math.random() * 8999);
+        while (currentIDS.includes(currentID)) {
+            currentID = 1000 + Math.floor(Math.random() * 8999);
+        }
+        currentIDS.push(currentID);
+        console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
+    }
+    io.to(socket.id).emit('register', currentID);
+
+    for (const room_id of room_manager.rooms_of_user(currentID)) {
+      socket.join(room_id);
+      update(room_id);
+    }
 
   });
 
@@ -232,6 +234,7 @@ io.on('connection', (socket) => {
         leave_room();
         currentIDS.pop(currentID);
         console.log(`[${currentID}] kicked due to timeout.`);
+        socket.emit('kick');
         
     }, timeout * 60 * 1000);
   });
@@ -254,7 +257,7 @@ io.on('connection', (socket) => {
 
   socket.on('revealCards', (cards) => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
-      console.log(`${currentID} @ ${room_id} revealed card ${cards}.`);
+      console.log(`<${currentID} @ ${room_id}> revealed card ${cards}.`);
       if (room_manager.rooms[room_id].game.state() != 0) { return }
 
       for (const card of cards) {
@@ -264,14 +267,14 @@ io.on('connection', (socket) => {
 
       if (room_manager.rooms[room_id].game.state() == -1) {
         io.to(room_id).emit('gameOver', room_manager.rooms[room_id].game.current);
-        console.log(`${currentID} @ ${room_id} game over (${room_manager.rooms[room_id].game.current}).`);
+        console.log(`<${currentID} @ ${room_id}> game over (${room_manager.rooms[room_id].game.current}).`);
       }     
     }
   });
 
   socket.on('reinitGame', (wordList) => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
-      console.log(`${currentID} @ ${room_id} reinits game with ${wordList}.`);
+      console.log(`<${currentID} @ ${room_id}> reinits game with ${wordList}.`);
       room_manager.rooms[room_id].game = new Game(wordList);
       update(room_id);
     }
@@ -280,7 +283,7 @@ io.on('connection', (socket) => {
   socket.on('next', () => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
       if (room_manager.rooms[room_id].game.state() != -1) { return }
-      console.log(`${currentID} @ ${room_id} goes next.`);
+      console.log(`<${currentID} @ ${room_id}> goes next.`);
       room_manager.rooms[room_id].game.next();
       update(room_id);
     }

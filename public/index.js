@@ -137,7 +137,15 @@ window.onload = adjustFontSize;
 window.onresize = adjustFontSize;
 window.addEventListener("orientationchange", (event) => {
     adjustFontSize
-  });
+});
+
+socket.on('kick', () => {
+    // clear local storage
+    localStorage.removeItem('codenames_user_id');
+    // redirect to home
+    window.location.href = "/";
+});
+
 
 socket.on('gameOver', (data) => {
     let length = 5;
