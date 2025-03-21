@@ -145,11 +145,12 @@ const RoomManager = class {
   
 }
 
+const CHECK_INTERVAL = 1; // 1 seconds
+const TIMEOUT_LIMIT = 2; // Number of missed pings before kicking
+
 const room_manager = new RoomManager();
-
 const currentIDS = [];
-
-const activeUsers = {};
+const activeUsers = {}; // Track { userID: { socketID, missedPings } }
 
 io.on('connection', (socket) => {
 
@@ -170,7 +171,7 @@ io.on('connection', (socket) => {
         console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
     }
 
-    activeUsers[currentID] = socket.id;
+    activeUsers[currentID] = { socketID: socket.id, missedPings: 0 };
     io.to(socket.id).emit('register', currentID);
 
     for (const room_id of room_manager.rooms_of_user(currentID)) {
@@ -178,6 +179,12 @@ io.on('connection', (socket) => {
       update(room_id);
     }
 
+  });
+
+  socket.on('pong', () => {
+    if (currentID && activeUsers[currentID]) {
+        activeUsers[currentID].missedPings = 0; // Reset missed pings on response
+    }
   });
 
   let files = fs.readdirSync('./public/wordlists/');
@@ -220,28 +227,29 @@ io.on('connection', (socket) => {
         socket.leave(room_id);
         update(room_id);
     }
-}
+  }
+
+  // Periodic Check to Remove Inactive Users
+  setInterval(() => {
+    Object.keys(activeUsers).forEach((userID) => {
+        if (activeUsers[userID]) {
+            activeUsers[userID].missedPings += 1;
+
+            if (activeUsers[userID].missedPings >= TIMEOUT_LIMIT) {
+                console.log(`User ${userID} removed due to inactivity.`);
+                leave_room(userID);
+                delete activeUsers[userID];
+                currentIDS.splice(currentIDS.indexOf(parseInt(userID)), 1);
+            } else {
+                io.to(activeUsers[userID].socketID).emit('ping'); // Ask for response
+            }
+        }
+    });
+  }, CHECK_INTERVAL);
 
   let timeout = 1;
   socket.on('disconnect', () => {
     console.log(`A connection disappeared! (socket: ${socket.id}, id: ${currentID}).`);
-    console.log(`Will kick due to timeout if not reconnected within ${timeout} minute.`);
-    is_connected = false;
-    console.log(`is_connected: ${is_connected}`);
-
-    setTimeout(function () {
-      if (activeUsers[currentID] !== socket.id) { 
-        // Only kick if the user hasn't reconnected with a new socket
-        leave_room();
-        currentIDS.pop(currentID);
-        delete activeUsers[currentID];
-
-        console.log(`[${currentID}] kicked due to timeout.`);
-        console.log(`is_connected: ${is_connected}`);
-
-        socket.emit('kick');
-      }
-    }, timeout * 60 * 1000);
   });
 
   socket.on('joinRoom', (dataObject) => { 

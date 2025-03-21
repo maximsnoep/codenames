@@ -139,11 +139,9 @@ window.addEventListener("orientationchange", (event) => {
     adjustFontSize
 });
 
-socket.on('kick', () => {
-    // clear local storage
-    localStorage.removeItem('codenames_user_id');
-    // redirect to home
-    window.location.href = "/";
+// Respond to server ping
+socket.on('ping', () => {
+    socket.emit('pong');
 });
 
 
