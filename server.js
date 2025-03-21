@@ -175,7 +175,7 @@ io.on('connection', (socket) => {
       }
       io.to(socket.id).emit('register', currentID);
 
-      for (const room_id of rooms_of_user(currentID)) {
+      for (const room_id of room_manager.rooms_of_user(currentID)) {
         socket.join(room_id);
         update(room_id);
       }
@@ -208,7 +208,7 @@ io.on('connection', (socket) => {
   }
 
   function leave_room() {
-    for (const room_id of rooms_of_user(currentID)) {
+    for (const room_id of room_manager.rooms_of_user(currentID)) {
         console.log(`${currentID} left <${room_id}>`);
         room_manager.rooms[room_id].del_member(currentID);
         if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
@@ -240,7 +240,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('toggleAdmin', (user_id) => {
-    for (const room_id of rooms_of_admin(currentID)) {
+    for (const room_id of room_manager.rooms_of_admin(currentID)) {
       room_manager.rooms[room_id].members[user_id].admin = !room_manager.rooms[room_id].members[user_id].admin;
       if (room_manager.rooms[room_id].num_admins() == 0) { 
         room_manager.rooms[room_id].add_admin(user_id);	
@@ -250,7 +250,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('revealCards', (cards) => {
-    for (const room_id of rooms_of_admin(currentID)) {
+    for (const room_id of room_manager.rooms_of_admin(currentID)) {
       console.log(`${currentID} @ ${room_id} reveals the ${cards} cards.`);
       if (room_manager.rooms[room_id].game.state() != 0) { return }
 
@@ -267,7 +267,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('reinitGame', (wordList) => {
-    for (const room_id of rooms_of_admin(currentID)) {
+    for (const room_id of room_manager.rooms_of_admin(currentID)) {
       console.log(`${currentID} @ ${room_id} reinits game with ${wordList}.`);
       room_manager.rooms[room_id].game = new Game(wordList);
       update(room_id);
@@ -275,7 +275,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('next', () => {
-    for (const room_id of rooms_of_admin(currentID)) {
+    for (const room_id of room_manager.rooms_of_admin(currentID)) {
       if (room_manager.rooms[room_id].game.state() != -1) { return }
       console.log(`${currentID} @ ${room_id} goes next.`);
       room_manager.rooms[room_id].game.next();
