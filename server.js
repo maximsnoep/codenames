@@ -146,7 +146,7 @@ const RoomManager = class {
 }
 
 const CHECK_INTERVAL = 6; // seconds
-const TIMEOUT_LIMIT = 10; // Number of missed pings before kicking
+const TIMEOUT_LIMIT = 20; // Number of missed pings before kicking
 
 const room_manager = new RoomManager();
 const activeUsers = {}; // Track { userID: { socketID, missedPings } }
