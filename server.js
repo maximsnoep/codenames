@@ -145,8 +145,8 @@ const RoomManager = class {
   
 }
 
-const CHECK_INTERVAL = 1; // 1 seconds
-const TIMEOUT_LIMIT = 30; // Number of missed pings before kicking
+const CHECK_INTERVAL = 6; // seconds
+const TIMEOUT_LIMIT = 10; // Number of missed pings before kicking
 
 const room_manager = new RoomManager();
 const activeUsers = {}; // Track { userID: { socketID, missedPings } }
@@ -232,7 +232,9 @@ io.on('connection', (socket) => {
     Object.keys(activeUsers).forEach((userID) => {
         if (activeUsers[userID]) {
             activeUsers[userID].missedPings += 1;
-            console.log(`User ${userID} missed ${activeUsers[userID].missedPings} pings.`);
+            if (activeUsers[userID].missedPings > 2) {
+              console.log(`User ${userID} missed ${activeUsers[userID].missedPings} pings.`);
+            }
             if (activeUsers[userID].missedPings >= TIMEOUT_LIMIT) {
                 console.log(`User ${userID} removed due to inactivity.`);
                 leave_room(userID);
