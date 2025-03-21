@@ -132,12 +132,6 @@ const RoomManager = class {
     this.rooms = {};
   }
 
-  remove_empty_rooms() {
-    for (const id of Object.entries(this.rooms).filter(([_, room]) => room.num_members() == 0).map(([id, _]) => id)) {
-      id && delete this.rooms[id];
-    }
-  }
-
   // room management
   is_room(id) { return id in this.rooms; }
 
@@ -152,19 +146,18 @@ const RoomManager = class {
 }
 
 const room_manager = new RoomManager();
+
 const currentIDS = [];
+
+const activeUsers = {};
 
 io.on('connection', (socket) => {
 
   let currentID = null;
-  let is_connected = true;
 
   console.log(`A new connection appeared! (socket: ${socket.id}).`);
   
   socket.on('register', function (data) {
-    is_connected = true;
-    console.log(`is_connected: ${is_connected}`);
-
     if (data !== null && (currentIDS.includes(parseInt(data)))) {
         currentID = parseInt(data);
         console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
@@ -176,6 +169,8 @@ io.on('connection', (socket) => {
         currentIDS.push(currentID);
         console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
     }
+
+    activeUsers[currentID] = socket.id;
     io.to(socket.id).emit('register', currentID);
 
     for (const room_id of room_manager.rooms_of_user(currentID)) {
@@ -214,14 +209,18 @@ io.on('connection', (socket) => {
     for (const room_id of room_manager.rooms_of_user(currentID)) {
         console.log(`${currentID} left <${room_id}>`);
         room_manager.rooms[room_id].del_member(currentID);
-        if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
-          room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
+
+        if (room_manager.rooms[room_id].num_members() === 0) {
+            console.log(`Room <${room_id}> is now empty and will be deleted.`);
+            delete room_manager.rooms[room_id];  // Remove empty room immediately
+        } else if (room_manager.rooms[room_id].num_admins() === 0) {
+            room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
         }
+
         socket.leave(room_id);
         update(room_id);
-      }
-    room_manager.remove_empty_rooms();
-  }
+    }
+}
 
   let timeout = 1;
   socket.on('disconnect', () => {
@@ -231,17 +230,17 @@ io.on('connection', (socket) => {
     console.log(`is_connected: ${is_connected}`);
 
     setTimeout(function () {
-      console.log(`is_connected: ${is_connected}`);
-      
-      if (is_connected) {
-        return;
-      }
-      leave_room();
-      currentIDS.pop(currentID);
-      console.log(`[${currentID}] kicked due to timeout.`);
-      console.log(`is_connected: ${is_connected}`);
+      if (activeUsers[currentID] !== socket.id) { 
+        // Only kick if the user hasn't reconnected with a new socket
+        leave_room();
+        currentIDS.pop(currentID);
+        delete activeUsers[currentID];
 
-      socket.emit('kick');
+        console.log(`[${currentID}] kicked due to timeout.`);
+        console.log(`is_connected: ${is_connected}`);
+
+        socket.emit('kick');
+      }
     }, timeout * 60 * 1000);
   });
 
