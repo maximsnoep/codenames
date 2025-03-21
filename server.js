@@ -12,7 +12,7 @@ const io = socketIO(server);
 app.use(express.static("public"));
 
 server.listen(8080, () => {
-  console.log('Server is running on http://localhost:8080');
+  console.log('Codenames is running on http://localhost:8080');
 });
 
 const Game = class {
@@ -25,10 +25,15 @@ const Game = class {
     this.coloring = [...Array(25).keys()].sort(() => 0.5 - Math.random());
     this.revealed = Array(25).fill(false);
     this.current = "red";
+
+    console.log(`Initialized game with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}`);
   }
 
   reveal(id) {
     let index = this.coloring.indexOf(parseInt(id));
+    if (this.revealed[i]) { 
+      return;
+    }
 
     if (this.current == "red") {
       if ((index >= 10 && index <= 17) || (index >= 18)) {
@@ -41,52 +46,58 @@ const Game = class {
     }
     
     this.revealed[id] = true;
+
+    console.log(`Revealed card ${id} (${this.codenames[id]})`);
   }
 
   state() {
-    let assassin = 0;
-    let red = 0;
-    let blue = 0;
-    let neutral = 0;
-    let revealed = 0;
+    let counts = { assassin: 0, red: 0, blue: 0, neutral: 0, revealed: 0 };
     for (let i = 0; i < this.revealed.length; i++) {
-      let index = this.coloring.indexOf(i);
-      if (this.revealed[i]) {
-          if (index === 0) {
-              assassin += 1;
-          }
-          if (index >= 1 && index <= 9) {
-              red += 1;
-          }
-          if (index >= 10 && index <= 17) {
-              blue += 1;
-          }
-          if (index >= 18) {
-              neutral += 1;
-          }
-          revealed += 1;
+      if (!this.revealed[i]) {
+        continue;
       }
+      let index = this.coloring.indexOf(i);
+
+      if (index === 0) {
+          counts.assassin += 1;
+      }
+      if (index >= 1 && index <= 9) {
+        counts.red += 1;
+      }
+      if (index >= 10 && index <= 17) {
+        counts.blue += 1;
+      }
+      if (index >= 18) {
+        counts.neutral += 1;
+      }      
     }
 
-    let assassin_win = assassin == 1;
-    let red_win = red == 9;
-    let blue_win = blue == 8;
-    if (assassin_win && !red_win && !blue_win) {
-      this.current = "over";
-      return 0;
-    } else if (red_win && !blue_win && !assassin_win) {
-      this.current = "over";
-      return 1;
-    } else if (blue_win && !red_win && !assassin_win) {
-      this.current = "over";
-      return 2;
-    } else {    
+    if (counts.assassin === 1) {
+      if (this.current === "red") {
+        this.current = "blue-assassin";
+        return -1;
+      }
+      if (this.current === "blue") {
+        this.current = "red-assassin";
+        return -1;
+      }
+    }
+    if (counts.blue === 8) {
+      this.current = "blue";
       return -1;
     }
+    if (counts.red === 9) {
+      this.current = "red";
+      return -1;
+    }
+    return 0;
+  }
+
+  next() {
+    this.current = this.current == "red" ? "blue" : "red";
   }
 
 }
-
 
 const Member = class {
   constructor(name) {
@@ -132,7 +143,11 @@ const RoomManager = class {
 
   // user management
   is_member_in_room(user_id, room_id) { return this.is_room(room_id) && this.rooms[room_id].is_member(user_id); }
-  is_admin_in_room(user_id, room_id) { return this.is_room(room_id) && this.rooms[room_id].is_admin(user_id); }
+  is_admin_in_room(user_id, room_id) { return this.is_room(room_id) && this.rooms[room_id].is_member(user_id) && this.rooms[room_id].is_admin(user_id); }
+
+  // all rooms of a user
+  rooms_of_user(user_id) { return Object.keys(this.rooms).filter(room_id => this.is_member_in_room(user_id, room_id)); }
+  rooms_of_admin(user_id) { return Object.keys(this.rooms).filter(room_id => this.is_admin_in_room(user_id, room_id)); }
   
 }
 
@@ -160,14 +175,10 @@ io.on('connection', (socket) => {
       }
       io.to(socket.id).emit('register', currentID);
 
-      for (const room_id of Object.keys(room_manager.rooms)) {
-        if (room_manager.is_member_in_room(currentID, room_id)) {
-          socket.join(room_id);
-          update(room_id);
-          break;
-        }
+      for (const room_id of rooms_of_user(currentID)) {
+        socket.join(room_id);
+        update(room_id);
       }
-
 
   });
 
@@ -197,8 +208,7 @@ io.on('connection', (socket) => {
   }
 
   function leave_room() {
-    for (const room_id of Object.keys(room_manager.rooms)) {
-      if (room_manager.rooms[room_id].is_member(currentID)) {
+    for (const room_id of rooms_of_user(currentID)) {
         console.log(`${currentID} left <${room_id}>`);
         room_manager.rooms[room_id].del_member(currentID);
         if (room_manager.rooms[room_id].num_members() > 0 && room_manager.rooms[room_id].num_admins() == 0) {
@@ -207,30 +217,30 @@ io.on('connection', (socket) => {
         socket.leave(room_id);
         update(room_id);
       }
-    }
     room_manager.remove_empty_rooms();
   }
 
   socket.on('disconnect', () => {
+    is_connected = false;
     setTimeout(function () {
-        if (!is_connected) {
-          is_connected = false;
-          leave_room();
-          currentIDS.pop(currentID);
+        if (is_connected) {
+          return;
         }
+        leave_room();
+        currentIDS.pop(currentID);
+        console.log(`${currentID}] kicked due to timeout.`);
+        
     }, 1 * 60 * 1000);
   });
 
-   socket.on('joinRoom', (dataObject) => { 
+  socket.on('joinRoom', (dataObject) => { 
     leave_room();
     let user_name = dataObject.user_name + "(" + currentID + ")";
     join_room(dataObject.room_id.toLowerCase(), user_name.toLowerCase());
   });
 
   socket.on('toggleAdmin', (user_id) => {
-    for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
-      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
+    for (const room_id of rooms_of_admin(currentID)) {
       room_manager.rooms[room_id].members[user_id].admin = !room_manager.rooms[room_id].members[user_id].admin;
       if (room_manager.rooms[room_id].num_admins() == 0) { 
         room_manager.rooms[room_id].add_admin(user_id);	
@@ -240,49 +250,35 @@ io.on('connection', (socket) => {
   });
 
   socket.on('revealCards', (cards) => {
-    console.log(`${currentID} revealed cards: ${cards}`);
+    for (const room_id of rooms_of_admin(currentID)) {
+      console.log(`${currentID} @ ${room_id} reveals the ${cards} cards.`);
+      if (room_manager.rooms[room_id].game.state() != 0) { return }
 
-    for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
-      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
-      let state = room_manager.rooms[room_id].game.state();
-      let current = room_manager.rooms[room_id].game.current;
       for (const card of cards) {
         room_manager.rooms[room_id].game.reveal(card);
       }
-      let new_state = room_manager.rooms[room_id].game.state();
-
       update(room_id);
-      
-      if (state == -1) {
-        if (new_state == 0 && current == "red") {
-          io.to(room_id).emit('gameOver', 'blue-assassin');
-        } else if (new_state == 0 && current == "blue") {
-          io.to(room_id).emit('gameOver', 'red-assassin');
-        } else if (new_state == 1) {
-          io.to(room_id).emit('gameOver', 'red');
-        } else if (new_state == 2) {
-          io.to(room_id).emit('gameOver', 'blue');
-        }
-      }
+
+      if (room_manager.rooms[room_id].game.state() == -1) {
+        io.to(room_id).emit('gameOver', room_manager.rooms[room_id].game.current);
+        console.log(`${currentID} @ ${room_id} game over (${room_manager.rooms[room_id].game.current}).`);
+      }     
     }
   });
 
   socket.on('reinitGame', (wordList) => {
-    for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
-      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
+    for (const room_id of rooms_of_admin(currentID)) {
+      console.log(`${currentID} @ ${room_id} reinits game with ${wordList}.`);
       room_manager.rooms[room_id].game = new Game(wordList);
       update(room_id);
     }
   });
 
   socket.on('next', () => {
-    for (const room_id of Object.keys(room_manager.rooms)) {
-      if (!room_manager.is_member_in_room(currentID, room_id)) { return }
-      if (!room_manager.is_admin_in_room(currentID, room_id)) { return }
+    for (const room_id of rooms_of_admin(currentID)) {
       if (room_manager.rooms[room_id].game.state() != -1) { return }
-      room_manager.rooms[room_id].game.current = room_manager.rooms[room_id].game.current == "red" ? "blue" : "red";
+      console.log(`${currentID} @ ${room_id} goes next.`);
+      room_manager.rooms[room_id].game.next();
       update(room_id);
     }
   });
