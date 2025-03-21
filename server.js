@@ -158,12 +158,12 @@ io.on('connection', (socket) => {
   console.log(`A new connection appeared! (socket: ${socket.id}).`);
   
   socket.on('register', function (data) {
-    if (data !== null && (activeUsers.includes(parseInt(data)))) {
+    if (data !== null && (activeUsers[parseInt(data)] !== undefined)) {
         currentID = parseInt(data);
         console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
     } else {
         currentID = 1000 + Math.floor(Math.random() * 8999);
-        while (activeUsers.includes(currentID)) {
+        while (activeUsers[currentID] !== undefined) {
             currentID = 1000 + Math.floor(Math.random() * 8999);
         }
         console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
