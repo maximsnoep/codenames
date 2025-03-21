@@ -30,17 +30,17 @@ const Game = class {
   }
 
   reveal(id) {
-    let index = this.coloring.indexOf(parseInt(id));
-    if (this.revealed[i]) { 
+    if (this.revealed[id]) { 
       return;
     }
 
+    let color = this.coloring.indexOf(parseInt(id));
     if (this.current == "red") {
-      if ((index >= 10 && index <= 17) || (index >= 18)) {
+      if ((color >= 10 && color <= 17) || (color >= 18)) {
           this.current = "blue";
       }
     } else if (this.current == "blue") {
-      if ((index >= 1 && index <= 9) || (index >= 18)) {
+      if ((color >= 1 && color <= 9) || (color >= 18)) {
           this.current = "red";
       }
     }
