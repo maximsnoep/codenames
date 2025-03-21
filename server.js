@@ -26,7 +26,7 @@ const Game = class {
     this.revealed = Array(25).fill(false);
     this.current = "red";
 
-    console.log(`Initialized game with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}`);
+    console.log(`GAME: Initialized with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}`);
   }
 
   reveal(id) {
@@ -47,7 +47,7 @@ const Game = class {
     
     this.revealed[id] = true;
 
-    console.log(`Revealed card ${id} (${this.codenames[id]})`);
+    console.log(`GAME: Revealed card ${id} (${this.codenames[id]}).`);
   }
 
   state() {
@@ -220,7 +220,10 @@ io.on('connection', (socket) => {
     room_manager.remove_empty_rooms();
   }
 
+  let timeout = 1;
   socket.on('disconnect', () => {
+    console.log(`A connection disappeared! (socket: ${socket.id}, id: ${currentID}).`);
+    console.log(`Will kick due to timeout if not reconnected within ${timeout} minute.`);
     is_connected = false;
     setTimeout(function () {
         if (is_connected) {
@@ -228,9 +231,9 @@ io.on('connection', (socket) => {
         }
         leave_room();
         currentIDS.pop(currentID);
-        console.log(`${currentID}] kicked due to timeout.`);
+        console.log(`[${currentID}] kicked due to timeout.`);
         
-    }, 1 * 60 * 1000);
+    }, timeout * 60 * 1000);
   });
 
   socket.on('joinRoom', (dataObject) => { 
@@ -251,7 +254,7 @@ io.on('connection', (socket) => {
 
   socket.on('revealCards', (cards) => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
-      console.log(`${currentID} @ ${room_id} reveals the ${cards} cards.`);
+      console.log(`${currentID} @ ${room_id} revealed card ${cards}.`);
       if (room_manager.rooms[room_id].game.state() != 0) { return }
 
       for (const card of cards) {
