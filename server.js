@@ -163,6 +163,7 @@ io.on('connection', (socket) => {
   
   socket.on('register', function (data) {
     is_connected = true;
+    console.log(`is_connected: ${is_connected}`);
 
     if (data !== null && (currentIDS.includes(parseInt(data)))) {
         currentID = parseInt(data);
@@ -227,15 +228,20 @@ io.on('connection', (socket) => {
     console.log(`A connection disappeared! (socket: ${socket.id}, id: ${currentID}).`);
     console.log(`Will kick due to timeout if not reconnected within ${timeout} minute.`);
     is_connected = false;
+    console.log(`is_connected: ${is_connected}`);
+
     setTimeout(function () {
-        if (is_connected) {
-          return;
-        }
-        leave_room();
-        currentIDS.pop(currentID);
-        console.log(`[${currentID}] kicked due to timeout.`);
-        socket.emit('kick');
-        
+      console.log(`is_connected: ${is_connected}`);
+      
+      if (is_connected) {
+        return;
+      }
+      leave_room();
+      currentIDS.pop(currentID);
+      console.log(`[${currentID}] kicked due to timeout.`);
+      console.log(`is_connected: ${is_connected}`);
+
+      socket.emit('kick');
     }, timeout * 60 * 1000);
   });
 
