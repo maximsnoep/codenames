@@ -1,6 +1,14 @@
 const socket = io();
 let currentID = localStorage.getItem('codenames_user_id');
-socket.emit("register", currentID);
+
+socket.on("ask", () => {
+    socket.emit('register', currentID);
+});
+
+socket.on("return", (data) => {
+    currentID = data;
+    localStorage.setItem('codenames_user_id', currentID);
+});
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
@@ -139,9 +147,20 @@ window.addEventListener("orientationchange", (event) => {
     adjustFontSize
 });
 
+// Count the pings, if not received in last TIMEOUT seconds, refresh the page
+const TIMEOUT = 30;
+let pingCount = 0;
+setInterval(() => {
+    if (pingCount === 0) {
+        location.reload();
+    }
+    pingCount = 0;
+}, 1000 * TIMEOUT);
+
 // Respond to server ping
 socket.on('ping', () => {
     socket.emit('pong');
+    pingCount += 1;
 });
 
 
@@ -232,9 +251,4 @@ socket.on('roomUpdate', (data) => {
 
     adjustFontSize();
 
-});
-
-socket.on("register", (data) => {
-    currentID = data;
-    localStorage.setItem('codenames_user_id', currentID);
 });

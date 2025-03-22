@@ -15,6 +15,27 @@ server.listen(8080, () => {
   console.log('Codenames is running on http://localhost:8080');
 });
 
+
+const CHECK_INTERVAL = 20; // seconds
+const TIMEOUT_LIMIT = 6; // Number of missed pings before kicking
+
+// Periodic Check to Remove Inactive Users
+setInterval(() => {
+  console.log(`Currently active users: ${Object.keys(activeUsers).length}. Checking for inactive users.`);
+  Object.keys(activeUsers).forEach((userID) => {
+      if (activeUsers[userID]) {
+        activeUsers[userID].missedPings += 1;
+        if (activeUsers[userID].missedPings >= TIMEOUT_LIMIT) {
+            console.log(`User ${userID} removed due to inactivity.`);
+            room_manager.remove_user_from_all_rooms(userID);
+            delete activeUsers[userID];
+        } else {
+            io.to(activeUsers[userID].socketID).emit('ping'); // Ask for response
+        }
+      }
+  });
+}, CHECK_INTERVAL * 1000);
+
 const Game = class {
   constructor(wordList) {
     this.codenames = fs.readFileSync(`public/wordlists/${wordList}.txt`, 'utf8').split('\n').sort(() => 0.5 - Math.random()).slice(0, 25);
@@ -109,7 +130,7 @@ const Member = class {
 const Room = class {
   constructor(id) {
     this.id = id;
-    this.members = {};
+    this.members = {}; 
     this.game = new Game('original');
   }
 
@@ -139,14 +160,36 @@ const RoomManager = class {
   is_member_in_room(user_id, room_id) { return this.is_room(room_id) && this.rooms[room_id].is_member(user_id); }
   is_admin_in_room(user_id, room_id) { return this.is_room(room_id) && this.rooms[room_id].is_member(user_id) && this.rooms[room_id].is_admin(user_id); }
 
+  // remove user from room
+  remove_user_from_room(user_id, room_id) {
+    if (this.is_member_in_room(user_id, room_id)) {
+      this.rooms[room_id].del_member(user_id);
+      if (this.rooms[room_id].num_members() === 0) {
+        console.log(`Room <${room_id}> is now empty and will be deleted.`);
+        delete this.rooms[room_id];  // Remove empty room immediately
+      } else if (this.rooms[room_id].num_admins() === 0) {
+        this.rooms[room_id].add_admin(Object.keys(this.rooms[room_id].members)[0]);
+      }
+    }
+  }
+
+  // remove user from all rooms
+  remove_user_from_all_rooms(user_id) {
+    for (const room_id of this.rooms_of_user(user_id)) {
+      this.remove_user_from_room(user_id, room_id);
+    }
+  }
+
+  // add user to room
+  add_user_to_room(user_id, room_id) {
+    this.rooms[room_id].add_member(user_id, new Member(user_id));
+  }
+
   // all rooms of a user
   rooms_of_user(user_id) { return Object.keys(this.rooms).filter(room_id => this.is_member_in_room(user_id, room_id)); }
   rooms_of_admin(user_id) { return Object.keys(this.rooms).filter(room_id => this.is_admin_in_room(user_id, room_id)); }
   
 }
-
-const CHECK_INTERVAL = 6; // seconds
-const TIMEOUT_LIMIT = 20; // Number of missed pings before kicking
 
 const room_manager = new RoomManager();
 const activeUsers = {}; // Track { userID: { socketID, missedPings } }
@@ -156,32 +199,33 @@ io.on('connection', (socket) => {
   let currentID = null;
 
   console.log(`A new connection appeared! (socket: ${socket.id}).`);
-  
+
+  socket.emit('ask');
+
   socket.on('register', function (data) {
     if (data !== null && (activeUsers[parseInt(data)] !== undefined)) {
-        currentID = parseInt(data);
-        console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
+      currentID = parseInt(data);
+      console.log(`ID [${currentID}] reconnected (socket: ${socket.id}).`);
     } else {
-        currentID = 1000 + Math.floor(Math.random() * 8999);
-        while (activeUsers[currentID] !== undefined) {
-            currentID = 1000 + Math.floor(Math.random() * 8999);
-        }
-        console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
+      currentID = 1000 + Math.floor(Math.random() * 8999);
+      while (activeUsers[currentID] !== undefined) {
+          currentID = 1000 + Math.floor(Math.random() * 8999);
+      }
+      console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
     }
 
     activeUsers[currentID] = { socketID: socket.id, missedPings: 0 };
-    io.to(socket.id).emit('register', currentID);
+    io.to(socket.id).emit('return', currentID);
 
     for (const room_id of room_manager.rooms_of_user(currentID)) {
       socket.join(room_id);
       update(room_id);
     }
-
   });
 
   socket.on('pong', () => {
-    if (currentID && activeUsers[currentID]) {
-        activeUsers[currentID].missedPings = 0; // Reset missed pings on response
+    if (currentID && activeUsers[currentID].socketID == socket.id) {
+        activeUsers[currentID].missedPings = 0;
     }
   });
 
@@ -190,61 +234,22 @@ io.on('connection', (socket) => {
   io.to(socket.id).emit('wordlistUpdate', files);
 
   function update(room_id) {
-    io.to(room_id).emit('roomUpdate', room_manager.rooms[room_id]);
-  }
-
-  function join_room(room_id, user_name) {
-    if (!room_id || !user_name) return;
-
-    if (!room_manager.is_room(room_id)) {
-      console.log(`${currentID} created <${room_id}>`);
-      room_manager.rooms[room_id] = new Room(room_id);
-      room_manager.rooms[room_id].add_member(currentID, new Member(user_name));
-      room_manager.rooms[room_id].add_admin(currentID);
-    } else {
-      console.log(`${currentID} joined <${room_id}>`);
-      room_manager.rooms[room_id].add_member(currentID, new Member(user_name));
+    for (const user_id of Object.keys(room_manager.rooms[room_id].members)) {
+      if (activeUsers[user_id] === undefined) {
+        continue;
+      }
+      io.to(activeUsers[user_id].socketID).emit('roomUpdate', room_manager.rooms[room_id]);
     }
-
-    socket.join(room_id);
-    update(room_id);
   }
 
   function leave_room() {
     for (const room_id of room_manager.rooms_of_user(currentID)) {
-        console.log(`${currentID} left <${room_id}>`);
-        room_manager.rooms[room_id].del_member(currentID);
-
-        if (room_manager.rooms[room_id].num_members() === 0) {
-            console.log(`Room <${room_id}> is now empty and will be deleted.`);
-            delete room_manager.rooms[room_id];  // Remove empty room immediately
-        } else if (room_manager.rooms[room_id].num_admins() === 0) {
-            room_manager.rooms[room_id].add_admin(Object.keys(room_manager.rooms[room_id].members)[0]);
-        }
-
-        socket.leave(room_id);
-        update(room_id);
+      console.log(`${currentID} left <${room_id}>`);
+      room_manager.remove_user_from_room(currentID, room_id);
+      socket.leave(room_id);
+      update(room_id);
     }
   }
-
-  // Periodic Check to Remove Inactive Users
-  setInterval(() => {
-    Object.keys(activeUsers).forEach((userID) => {
-        if (activeUsers[userID]) {
-            activeUsers[userID].missedPings += 1;
-            if (activeUsers[userID].missedPings > 2) {
-              console.log(`User ${userID} missed ${activeUsers[userID].missedPings} pings.`);
-            }
-            if (activeUsers[userID].missedPings >= TIMEOUT_LIMIT) {
-                console.log(`User ${userID} removed due to inactivity.`);
-                leave_room(userID);
-                delete activeUsers[userID];
-            } else {
-                io.to(activeUsers[userID].socketID).emit('ping'); // Ask for response
-            }
-        }
-    });
-  }, CHECK_INTERVAL * 1000);
 
   socket.on('disconnect', () => {
     console.log(`A connection disappeared! (socket: ${socket.id}, id: ${currentID}).`);
@@ -252,8 +257,26 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', (dataObject) => { 
     leave_room();
-    let user_name = dataObject.user_name + "(" + currentID + ")";
-    join_room(dataObject.room_id.toLowerCase(), user_name.toLowerCase());
+    if (activeUsers[currentID] === undefined) {
+      return;
+    }
+
+    let user_name = (dataObject.user_name + "(" + currentID + ")").toLowerCase();
+    let room_id = dataObject.room_id.toLowerCase(); 
+    if (!room_id || !user_name) return;
+
+    if (!room_manager.is_room(room_id)) {
+      console.log(`${currentID} created <${room_id}>`);
+      room_manager.rooms[room_id] = new Room(room_id);
+      room_manager.add_user_to_room(currentID, room_id);
+      room_manager.rooms[room_id].add_admin(currentID);
+    } else {
+      console.log(`${currentID} joined <${room_id}>`);
+      room_manager.add_user_to_room(currentID, room_id);
+    }
+
+    socket.join(room_id);
+    update(room_id);
   });
 
   socket.on('toggleAdmin', (user_id) => {
