@@ -46,6 +46,7 @@ const Game = class {
     this.coloring = [...Array(25).keys()].sort(() => 0.5 - Math.random());
     this.revealed = Array(25).fill(false);
     this.current = "red";
+    this.over = false;
 
     console.log(`GAME: Initialized with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}`);
   }
@@ -72,6 +73,10 @@ const Game = class {
   }
 
   state() {
+    if (this.over) {
+      return -1;
+    }
+
     let counts = { assassin: 0, red: 0, blue: 0, neutral: 0, revealed: 0 };
     for (let i = 0; i < this.revealed.length; i++) {
       if (!this.revealed[i]) {
@@ -96,26 +101,35 @@ const Game = class {
     if (counts.assassin === 1) {
       if (this.current === "red") {
         this.current = "blue-assassin";
+        this.over = true;
         return -1;
       }
       if (this.current === "blue") {
         this.current = "red-assassin";
+        this.over = true;
         return -1;
       }
     }
     if (counts.blue === 8) {
       this.current = "blue";
+      this.over = true;
       return -1;
     }
     if (counts.red === 9) {
       this.current = "red";
+      this.over = true;
       return -1;
     }
     return 0;
   }
 
   next() {
+    if (this.state() == -1) { return }
+    console.log(`state: ${this.state()}`);
+    console.log(`GAME: Next turn.`);
+    console.log(`GAME: Current turn is ${this.current}.`);
     this.current = this.current == "red" ? "blue" : "red";
+    console.log(`GAME: Next turn is ${this.current}.`);
   }
 
 }
@@ -234,6 +248,9 @@ io.on('connection', (socket) => {
   io.to(socket.id).emit('wordlistUpdate', files);
 
   function update(room_id) {
+    if (!room_manager.is_room(room_id)) {
+      return;
+    }
     for (const user_id of Object.keys(room_manager.rooms[room_id].members)) {
       if (activeUsers[user_id] === undefined) {
         continue;
@@ -292,13 +309,17 @@ io.on('connection', (socket) => {
   socket.on('revealCards', (cards) => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
       console.log(`<${currentID} @ ${room_id}> revealed card ${cards}.`);
-      if (room_manager.rooms[room_id].game.state() != 0) { return }
 
       for (const card of cards) {
         room_manager.rooms[room_id].game.reveal(card);
       }
+
       update(room_id);
 
+      if (room_manager.rooms[room_id].game.over) {
+        return;
+      }
+      
       if (room_manager.rooms[room_id].game.state() == -1) {
         io.to(room_id).emit('gameOver', room_manager.rooms[room_id].game.current);
         console.log(`<${currentID} @ ${room_id}> game over (${room_manager.rooms[room_id].game.current}).`);
@@ -316,7 +337,6 @@ io.on('connection', (socket) => {
 
   socket.on('next', () => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
-      if (room_manager.rooms[room_id].game.state() != -1) { return }
       console.log(`<${currentID} @ ${room_id}> goes next.`);
       room_manager.rooms[room_id].game.next();
       update(room_id);

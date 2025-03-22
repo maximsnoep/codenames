@@ -101,7 +101,12 @@
             <input type="text" id="room_id" size="8" maxlength="8" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="return /[a-z]/i.test(event.key)" />
           </div>
           <div style="padding: 0 0.5rem;">
-            <button onclick="if (confirm('You are about join <' + document.getElementById('room_id').value.toLowerCase() + '> as <' + document.getElementById('user_name').value.toLowerCase() + '>')) socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });">join</button>
+            <button onclick="
+              if (confirm('You are about join <' + document.getElementById('room_id').value.toLowerCase() + '> as <' + document.getElementById('user_name').value.toLowerCase() + '>')) {
+                socket.emit('joinRoom', { 'room_id': document.getElementById('room_id').value, 'user_name': document.getElementById('user_name').value });
+                document.getElementById('sorted').checked = false;
+                document.getElementById('colors').checked = false;
+              }">join</button>
           </div>     
         </div>
 
@@ -122,7 +127,7 @@
             <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value);">reset</button>
           </div>
           <div style="padding: 0 0.5rem;">
-            <button onclick="socket.emit('next');">pass</button>
+            <button onclick="socket.emit('next');">next</button>
           </div>
         </div>
 

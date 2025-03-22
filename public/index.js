@@ -1,14 +1,28 @@
 const socket = io();
-let currentID = localStorage.getItem('codenames_user_id');
+let currentID = sessionStorage.getItem('codenames_user_id');
 
 socket.on("ask", () => {
     socket.emit('register', currentID);
+    resetRoom();
 });
 
 socket.on("return", (data) => {
     currentID = data;
-    localStorage.setItem('codenames_user_id', currentID);
+    sessionStorage.setItem('codenames_user_id', currentID);
+    document.getElementById('sorted').checked = false;
+    document.getElementById('colors').checked = false;
 });
+
+function resetRoom() {
+    document.getElementById('grid-container').innerHTML = "";
+    document.getElementById('stats-lower').innerHTML = "";
+    document.body.style.backgroundColor = "#f5f5f5";
+    document.getElementById('room_info').innerHTML = "";
+    Array.from(document.getElementsByClassName('admin-controls')).forEach((o) => { o.classList.add('hidden'); });
+    document.getElementById('sorted').checked = false;
+    document.getElementById('colors').checked = false;
+}
+
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
@@ -165,7 +179,9 @@ socket.on('ping', () => {
 
 
 socket.on('gameOver', (data) => {
-    let length = 5;
+    document.body.style.backgroundColor = "#f5f5f5";
+
+    let length = 10;
     if (data === "red-assassin") {
         startWinAnimation('rgb(0, 0, 0, 1.0)', length);
         startWinAnimation('rgb(209, 86, 86, 1.0)', length);
@@ -194,19 +210,20 @@ socket.on('wordlistUpdate', (data) => {
 });
 
 socket.on('roomUpdate', (data) => {
-
     // show grid
     let sorted = document.getElementById('sorted').checked;
     let admin = document.getElementById('colors').checked;
     buildGrid(data, admin, sorted);
     document.getElementById('stats-lower').innerHTML = getStats(data);
 
-    if (data.game.current == "red") {
-        document.body.style.backgroundColor = "#ffe9e9";
-    } else if (data.game.current == "blue") {
-        document.body.style.backgroundColor = "#e6eaff";
-    } else {
+    if (data.game.over) {
         document.body.style.backgroundColor = "#f5f5f5";
+    } else {
+        if (data.game.current == "red") {
+            document.body.style.backgroundColor = "#ffe9e9";
+        } else if (data.game.current == "blue") {
+            document.body.style.backgroundColor = "#e6eaff";
+        }            
     }
 
     // show room info
@@ -250,5 +267,4 @@ socket.on('roomUpdate', (data) => {
     });
 
     adjustFontSize();
-
 });
