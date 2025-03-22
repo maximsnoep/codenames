@@ -181,8 +181,8 @@ const RoomManager = class {
   }
 
   // add user to room
-  add_user_to_room(user_id, room_id) {
-    this.rooms[room_id].add_member(user_id, new Member(user_id));
+  add_user_to_room(user_id, user_name, room_id) {
+    this.rooms[room_id].add_member(user_id, new Member(user_name));
   }
 
   // all rooms of a user
@@ -268,11 +268,11 @@ io.on('connection', (socket) => {
     if (!room_manager.is_room(room_id)) {
       console.log(`${currentID} created <${room_id}>`);
       room_manager.rooms[room_id] = new Room(room_id);
-      room_manager.add_user_to_room(currentID, room_id);
+      room_manager.add_user_to_room(currentID, user_name, room_id);
       room_manager.rooms[room_id].add_admin(currentID);
     } else {
       console.log(`${currentID} joined <${room_id}>`);
-      room_manager.add_user_to_room(currentID, room_id);
+      room_manager.add_user_to_room(currentID, user_name, room_id);
     }
 
     socket.join(room_id);
