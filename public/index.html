@@ -22,38 +22,68 @@
     </div>  
 
     <div class="toggleable" style="position: fixed; top: 0; left: 0; margin: 20px;">
-      <span style="cursor: pointer; z-index: 100;" onmouseover="this.nextElementSibling.style.display='block'" onmouseout="this.nextElementSibling.style.display='none'">&#9432;</span>
-      <div style="display: none; position: fixed; top: 0; left: 0; margin: 20px; z-index: 99; background-color: #f5f5f5; padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; padding: 40px;">
-        <p><strong>Rules:</strong><br>
-          - Two teams: Red and Blue. Each has a Spymaster and guessers.<br>
-          - Spymasters see all card colors; guessers do not.<br>
-          - Spymasters give a one-word clue and a number, indicating how many words relate.<br>
-          - The number "Infinity" means the guessers should be able to finish the game.<br>
-          - Guessers try to find their words, up to the number +1 (they may retry missed words).<br>
-          - Correct guesses continue the turn.<br>
-          - Wrong guesses (neutral or opposing words) end the turn.<br>
-          - Guessing the assassin (black) loses the game instantly.<br>
-          - Red must find 9 words, Blue must find 8 to win.<br>
-          - Teams may pass instead of guessing.<br>
-          - The first team to find all their words wins.<br>
-        </p>
-        
-        <p><strong>Controls:</strong><br>
-          - Join a game by entering a user name and game room.<br>
-          - The first player to join becomes the admin.<br>
-          - In the user list, your name is bold, and admins are underlined.<br>
-          - Admins can promote/demote players by clicking their name.<br>
-          - Admins can reset the game and change the wordlist.<br>
-          - Admins can see and sort card colors (only on their screen).<br>
-          - Admins can reveal a card's color by clicking it twice.<br>
-          - Admins can click "pass" to advance to the next turn.<br>
-          - Turns automatically pass after an incorrect guess.<br>
-          - The screen background shows the current team's turn.<br>
-        </p>
-
-
+      <span style="cursor: pointer; z-index: 100;" 
+            onclick="toggleTooltip(this)" 
+            onmouseover="showTooltip(this)">
+        &#9432;
+      </span>
+      <div class="tooltip-content" 
+           style="display: none; position: fixed; top: 0; left: 0; margin: 20px; z-index: 99; background-color: #f5f5f5; padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; padding: 40px;" 
+           onmouseover="cancelHideTooltip()" 
+           onmouseout="delayedHideTooltip()">
+            <p><strong>Game Rules:</strong></p>
+            <ul>
+              <li>Two teams: <span style="color: #d15656; font-weight: bold;">Red</span> (9 words) & <span style="color: #5666d1; font-weight: bold;">Blue</span> (8 words).</li>
+              <li>Each team has one Spymaster and one or more guessers.</li>
+              <li>Spymasters see all word colors and give a one-word clue + a number (e.g., "Skibidi 3").</li>
+              <li>The number indicates related words left; guessers may guess up to one extra.</li>
+              <li>There is one <span style="color: #242424; font-weight: bold;">Assassin</span> word. If picked, that team loses immediately.</li>
+              <li>A wrong guess (picking a <span style="color: #8c8c8c; font-weight: bold;">Neutral</span> word or a word from the other team) ends the turn immediately.</li>
+              <li>You can always pass guessing and give the turn to the other team.</li>
+              <li>The first team to find all their words wins.</li>
+            </ul>
+            
+            <p><strong>Game Controls:</strong></p>
+            <ul>
+              <li>The background color indicates whose turn it is.</li>
+              <li>The first player in a room becomes <strong>Admin</strong>.</li>
+              <li>Admins can promote others by clicking their name.</li>
+              <li>Admins can select wordlists and reset the game.</li>
+              <li>Admins can pass to skip guessing or manually switch turns.</li>
+              <li>Admins can click a word twice to reveal it.</li>
+              <li>Admins can play as Spymasters, by seeing and sorting card colors (only on their screen).</li>
+              <li>Turns auto-pass after a wrong guess.</li>
+            </ul>
       </div>
     </div>
+    
+    <script>
+      let hideTimeout;
+      
+      function showTooltip(element) {
+        clearTimeout(hideTimeout);
+        element.nextElementSibling.style.display = 'block';
+      }
+    
+      function toggleTooltip(element) {
+        const tooltip = element.nextElementSibling;
+        if (tooltip.style.display === 'block') {
+          tooltip.style.display = 'none';
+        } else {
+          showTooltip(element);
+        }
+      }
+    
+      function delayedHideTooltip() {
+        hideTimeout = setTimeout(() => {
+          document.querySelector('.tooltip-content').style.display = 'none';
+        }, 700); // Delays hiding for 700ms
+      }
+    
+      function cancelHideTooltip() {
+        clearTimeout(hideTimeout); // Prevents hiding when hovering over the tooltip
+      }
+    </script>
 
 
     <div style="display: grid; align-items: center; text-align: center; grid-template-rows: auto auto auto; min-height: 100%; min-width: 100%">
