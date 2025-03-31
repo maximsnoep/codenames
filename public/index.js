@@ -36,7 +36,11 @@ function buildGrid(data, admin, sorted) {
 
     let word_indices = [];
     if (sorted && sorted !== null) {
-        word_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 20, 0, 21, 22, 23, 24, 10, 11, 12, 13, 14, 15, 16, 17].map(i => data.game.coloring[i]);
+        word_indices = [1, 2, 21, 10, 11,
+                        3, 4, 22, 12, 13,
+                        5, 6, 0,  14, 15,
+                        7, 8, 23, 16, 17,
+                        9, 18, 19, 20, 24].map(i => data.game.coloring[i]);
     } else {
         word_indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
     }
