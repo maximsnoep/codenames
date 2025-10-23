@@ -78,7 +78,11 @@ function buildGrid(data, admin, sorted) {
         // neutral is coloring[18..25]
         let card;
         if (index === 0) {
-            card = "assassin";
+            if (document.getElementById('assassin-toggle').checked) {
+                card = "assassin";
+            } else {
+                card = "innocent";
+            }   
         } else if (index >= 1 && index <= 9) {
             card = "red";
         } else if (index >= 10 && index <= 17) {
