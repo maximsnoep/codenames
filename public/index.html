@@ -121,10 +121,14 @@
             <label for="sorted">sorted</label>
           </div>
           <div style="padding: 0 0.5rem;">
+            <input type="checkbox" id="assassin-toggle" value="assassin-toggle" />
+            <label for="assassin-toggle">assassin?</label>
+          </div>
+          <div style="padding: 0 0.5rem;">
             <select id="wordlist"></select>
           </div>
           <div style="padding: 0 0.5rem;">
-            <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value);">reset</button>
+            <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value, document.getElementById('assassin-toggle').value;">reset</button>
           </div>
           <div style="padding: 0 0.5rem;">
             <button onclick="socket.emit('next');">next</button>
