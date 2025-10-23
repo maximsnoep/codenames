@@ -85,8 +85,11 @@ const Game = class {
       }
       let index = this.coloring.indexOf(i);
 
-      if (index === 0) {
+      if (index === 0 && this.assassin) {
           counts.assassin += 1;
+      }
+      if (index === 0 && !this.assassin) {
+        counts.neutral += 1;
       }
       if (index >= 1 && index <= 9) {
         counts.red += 1;
