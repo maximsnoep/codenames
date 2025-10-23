@@ -21,6 +21,26 @@ function resetRoom() {
     Array.from(document.getElementsByClassName('admin-controls')).forEach((o) => { o.classList.add('hidden'); });
     document.getElementById('sorted').checked = false;
     document.getElementById('colors').checked = false;
+
+    // randomly generate 0 or 1
+    // if 0, all blue will be blue, all red will be red
+    // if 1, all blue will be red, all red will be blue
+    
+    const random = Math.floor(Math.random() * 2);
+    if (random === 1) {
+        swapTeamColors();
+    }    
+}
+
+// helper function to swap blue/red CSS variables
+function swapTeamColors() {
+    const root = document.documentElement;
+    const redColor = getComputedStyle(root).getPropertyValue('--red');
+    const blueColor = getComputedStyle(root).getPropertyValue('--blue');
+
+    // swap CSS custom properties if defined
+    root.style.setProperty('--red', blueColor);
+    root.style.setProperty('--blue', redColor);
 }
 
 
