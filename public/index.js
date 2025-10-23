@@ -29,22 +29,57 @@ function resetRoom() {
     // if 1, all blue will be red, all red will be blue
     
     const random = Math.floor(Math.random() * 2);
+    swapTeamColors(random);
     console.log(random);
-    if (random === 1) {
-        swapTeamColors();
-        console.log(random);
-    }    
+     
 }
 
 // helper function to swap blue/red CSS variables
-function swapTeamColors() {
-    const root = document.documentElement;
-    const redColor = getComputedStyle(root).getPropertyValue('--red');
-    const blueColor = getComputedStyle(root).getPropertyValue('--blue');
+function swapTeamColors(random) {
+    if (random === 0) {
+        stylesheet = document.styleSheets[0]
+        stylesheet.insertRule(".red-revealed {
+            background-color: #d15656 !important;
+            color: #ffffff !important;
+        }", 0);
+    
+        stylesheet.insertRule(".red-unrevealed {
+            border-color: #d15656 !important;
+            background-color: #ffe9e9 !important;
+        }", 0);
+    
+        stylesheet.insertRule(".blue-revealed {
+            background-color: #5666d1 !important;
+            color: #ffffff !important;
+        }", 0);
+    
+        stylesheet.insertRule(".blue-unrevealed {
+            border-color: #5666d1 !important;
+            background-color: #e6eaff !important;
+        }", 0);
+    } else {
+        stylesheet = document.styleSheets[0]
+        stylesheet.insertRule(".red-revealed {
+            background-color: green !important;
+            color: #ffffff !important;
+        }", 0);
+    
+        stylesheet.insertRule(".red-unrevealed {
+            border-color: green !important;
+            background-color: #ffe9e9 !important;
+        }", 0);
+    
+        stylesheet.insertRule(".blue-revealed {
+            background-color: #5666d1 !important;
+            color: #ffffff !important;
+        }", 0);
+    
+        stylesheet.insertRule(".blue-unrevealed {
+            border-color: #5666d1 !important;
+            background-color: #e6eaff !important;
+        }", 0);
+    }
 
-    // swap CSS custom properties if defined
-    root.style.setProperty('--red', blueColor);
-    root.style.setProperty('--blue', redColor);
 }
 
 
