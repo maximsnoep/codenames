@@ -129,7 +129,7 @@
             <select id="wordlist"></select>
           </div>
           <div style="padding: 0 0.5rem;">
-            <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value, document.getElementById('assassin-toggle').checked;)">reset</button>
+            <button onclick="if (confirm('Are you sure you want to re-initialize the game?')) socket.emit('reinitGame', document.getElementById('wordlist').value, document.getElementById('assassin-toggle').checked)">reset</button>
           </div>
           <div style="padding: 0 0.5rem;">
             <button onclick="socket.emit('next');">next</button>
