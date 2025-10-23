@@ -41,7 +41,6 @@ function swapTeamColors(random) {
         editCSS.innerHTML = ".red-revealed { background-color: #d15656 !important; color: #ffffff !important; } .red-unrevealed { border-color: #d15656 !important; background-color: #ffe9e9 !important; } .blue-revealed { background-color: #5666d1 !important; color: #ffffff !important; } .blue-unrevealed { border-color: #5666d1 !important; background-color: #e6eaff !important; } ";
         document.body.appendChild(editCSS);
     } else {
-        stylesheet = document.styleSheets[0]
         var editCSS = document.createElement('style')
         editCSS.innerHTML = ".blue-revealed { background-color: #d15656 !important; color: #ffffff !important; } .blue-unrevealed { border-color: #d15656 !important; background-color: #ffe9e9 !important; } .red-revealed { background-color: #5666d1 !important; color: #ffffff !important; } .red-unrevealed { border-color: #5666d1 !important; background-color: #e6eaff !important; } ";
         document.body.appendChild(editCSS);
