@@ -29,6 +29,7 @@ function resetRoom() {
     const random = Math.floor(Math.random() * 2);
     if (random === 1) {
         swapTeamColors();
+        console.log(random);
     }    
 }
 
