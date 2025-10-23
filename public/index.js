@@ -37,14 +37,9 @@ function resetRoom() {
 // helper function to swap blue/red CSS variables
 function swapTeamColors(random) {
     if (random === 0) {
-        stylesheet = document.styleSheets[0]
-        stylesheet.insertRule(".red-revealed { background-color: #d15656 !important; color: #ffffff !important; }", 0);
-    
-        stylesheet.insertRule(".red-unrevealed { border-color: #d15656 !important; background-color: #ffe9e9 !important; }", 0);
-    
-        stylesheet.insertRule(".blue-revealed { background-color: #5666d1 !important; color: #ffffff !important; }", 0);
-    
-        stylesheet.insertRule(".blue-unrevealed { border-color: #5666d1 !important; background-color: #e6eaff !important; }", 0);
+        var editCSS = document.createElement('style')
+        editCSS.innerHTML = ".red-revealed { background-color: green !important; color: #ffffff !important; }; .red-unrevealed { border-color: green !important; background-color: #ffe9e9 !important; }; .blue-revealed { background-color: #5666d1 !important; color: #ffffff !important; }; .blue-unrevealed { border-color: #5666d1 !important; background-color: #e6eaff !important; }; ";
+        document.body.appendChild(editCSS);
     } else {
         stylesheet = document.styleSheets[0]
         stylesheet.insertRule(".red-revealed { background-color: green !important; color: #ffffff !important; }", 0);
