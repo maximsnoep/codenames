@@ -11,6 +11,7 @@ socket.on("return", (data) => {
     sessionStorage.setItem('codenames_user_id', currentID);
     document.getElementById('sorted').checked = false;
     document.getElementById('colors').checked = false;
+    document.getElementById('assassin-toggle').checked = true;
 });
 
 function resetRoom() {
@@ -21,6 +22,7 @@ function resetRoom() {
     Array.from(document.getElementsByClassName('admin-controls')).forEach((o) => { o.classList.add('hidden'); });
     document.getElementById('sorted').checked = false;
     document.getElementById('colors').checked = false;
+    document.getElementById('assassin-toggle').checked = true;
 
     // randomly generate 0 or 1
     // if 0, all blue will be blue, all red will be red
