@@ -130,7 +130,11 @@ function getStats(data) {
         let index = data.game.coloring.indexOf(i);
         if (data.game.revealed[i]) {
             if (index === 0) {
-                assassin += 1;
+                if (document.getElementById('assassin-toggle').checked) {
+                    assassin += 1;
+                } else {
+                    neutral += 1;
+                }
             }
             if (index >= 1 && index <= 9) {
                 red += 1;
