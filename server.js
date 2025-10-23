@@ -37,7 +37,7 @@ setInterval(() => {
 }, CHECK_INTERVAL * 1000);
 
 const Game = class {
-  constructor(wordList) {
+  constructor(wordList, assassin) {
     this.codenames = fs.readFileSync(`public/wordlists/${wordList}.txt`, 'utf8').split('\n').sort(() => 0.5 - Math.random()).slice(0, 25);
     // assassin is coloring[0]
     // red cards is coloring[1..9]
@@ -47,8 +47,9 @@ const Game = class {
     this.revealed = Array(25).fill(false);
     this.current = "red";
     this.over = false;
+    this.assassin = assassin;
 
-    console.log(`GAME: Initialized with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}`);
+    console.log(`GAME: Initialized with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}\n  assassin: ${this.assassin}\n`);
   }
 
   reveal(id) {
@@ -145,7 +146,7 @@ const Room = class {
   constructor(id) {
     this.id = id;
     this.members = {}; 
-    this.game = new Game('original');
+    this.game = new Game('original', true);
   }
 
   // member management
@@ -327,10 +328,10 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('reinitGame', (wordList) => {
+  socket.on('reinitGame', (wordList, assassin) => {
     for (const room_id of room_manager.rooms_of_admin(currentID)) {
       console.log(`<${currentID} @ ${room_id}> reinits game with ${wordList}.`);
-      room_manager.rooms[room_id].game = new Game(wordList);
+      room_manager.rooms[room_id].game = new Game(wordList, assassin);
       update(room_id);
     }
   });
