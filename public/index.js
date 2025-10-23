@@ -125,6 +125,11 @@ function getStats(data) {
     let blue = 0;
     let neutral = 0;
     let revealed = 0;
+
+     if (!document.getElementById('assassin-toggle').checked) {
+        assassin += 1;
+        neutral -= 1;
+    }
     
     for (let i = 0; i < data.game.revealed.length; i++) {
         let index = data.game.coloring.indexOf(i);
