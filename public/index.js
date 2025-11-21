@@ -22,32 +22,8 @@ function resetRoom() {
     Array.from(document.getElementsByClassName('admin-controls')).forEach((o) => { o.classList.add('hidden'); });
     document.getElementById('sorted').checked = false;
     document.getElementById('colors').checked = false;
-    document.getElementById('assassin-toggle').checked = true;
-
-    // randomly generate 0 or 1
-    // if 0, all blue will be blue, all red will be red
-    // if 1, all blue will be red, all red will be blue
-    
-    const random = Math.floor(Math.random() * 2);
-    swapTeamColors(random);
-    console.log(random);
-     
+    document.getElementById('assassin-toggle').checked = true;     
 }
-
-// helper function to swap blue/red CSS variables
-function swapTeamColors(random) {
-    if (random === 0) {
-        var editCSS = document.createElement('style')
-        editCSS.innerHTML = ".red-revealed { background-color: #d15656 !important; color: #ffffff !important; } .red-unrevealed { border-color: #d15656 !important; background-color: #ffe9e9 !important; } .blue-revealed { background-color: #5666d1 !important; color: #ffffff !important; } .blue-unrevealed { border-color: #5666d1 !important; background-color: #e6eaff !important; } ";
-        document.body.appendChild(editCSS);
-    } else {
-        var editCSS = document.createElement('style')
-        editCSS.innerHTML = ".blue-revealed { background-color: #d15656 !important; color: #ffffff !important; } .blue-unrevealed { border-color: #d15656 !important; background-color: #ffe9e9 !important; } .red-revealed { background-color: #5666d1 !important; color: #ffffff !important; } .red-unrevealed { border-color: #5666d1 !important; background-color: #e6eaff !important; } ";
-        document.body.appendChild(editCSS);
-    }
-
-}
-
 
 // choose random character from the cast of The Room (2003)
 document.addEventListener('DOMContentLoaded', function() {
