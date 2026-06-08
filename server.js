@@ -157,6 +157,7 @@ const Member = class {
 	constructor(name) {
 		this.name = name;
 		this.admin = false;
+		this.number = 0; // per-name join number, assigned by the room on add
 	}
 };
 
@@ -164,6 +165,9 @@ const Room = class {
 	constructor(id) {
 		this.id = id;
 		this.members = {};
+		// How many members have EVER joined with each base name. Persists for
+		// the life of the room so numbers stay stable when members leave.
+		this.name_counts = {};
 		this.game = new Game("original", true);
 	}
 
@@ -172,6 +176,9 @@ const Room = class {
 		return id in this.members;
 	}
 	add_member(id, m) {
+		const count = (this.name_counts[m.name] || 0) + 1;
+		this.name_counts[m.name] = count;
+		m.number = count;
 		this.members[id] = m;
 	}
 	del_member(id) {
@@ -342,12 +349,7 @@ io.on("connection", (socket) => {
 			return;
 		}
 
-		let user_name = (
-			dataObject.user_name +
-			"(" +
-			currentID +
-			")"
-		).toLowerCase();
+		let user_name = dataObject.user_name.toLowerCase();
 		let room_id = dataObject.room_id.toLowerCase();
 		if (!room_id || !user_name) return;
 

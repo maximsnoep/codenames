@@ -393,6 +393,10 @@ socket.on("roomUpdate", (data) => {
 	// show room info
 	// make bold for this user
 	// make underline for admin
+	//
+	// A name only shows a number once the room has ever had more than one
+	// member with that name. The number is assigned at join time and is
+	// persistent, so it stays stable even after others leave.
 	let members = [];
 	for (const [id, member] of Object.entries(data.members)) {
 		let bold = "";
@@ -403,7 +407,11 @@ socket.on("roomUpdate", (data) => {
 		if (member.admin) {
 			underline = "text-decoration: underline;";
 		}
-		let m = `<span class="member-item" id="${id}" style="${bold}${underline}">${member.name}</span>`;
+		const duplicated = (data.name_counts[member.name] || 0) > 1;
+		const label = duplicated
+			? `${member.name} ${member.number}`
+			: member.name;
+		let m = `<span class="member-item" id="${id}" style="${bold}${underline}">${label}</span>`;
 		members.push(m);
 	}
 	document.getElementById("room_info").innerHTML =
