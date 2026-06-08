@@ -1,100 +1,105 @@
+/* Opt out of browser/OS forced dark mode so card colors are never altered. */
+:root {
+	color-scheme: light only;
+}
+
 body {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 div.grid-item {
-    background-color: #ffffff;
-    border: 2px solid #ccc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	background-color: #ffffff;
+	border: 2px solid #ccc;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 div.grid-item[highlighted] {
-    animation: pulsate 1.5s infinite;
+	animation: pulsate 1.5s infinite;
 }
 
 @keyframes pulsate {
-    0% {
-        scale: 1;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    50% {
-        scale: 1.02;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
-    }
-    100% {
-        scale: 1;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+	0% {
+		scale: 1;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	}
+	50% {
+		scale: 1.02;
+		box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+	}
+	100% {
+		scale: 1;
+		box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	}
 }
 
 .assassin-revealed {
-    background-color: #242424 !important;
-    color: #ffffff !important;
+	background-color: #242424 !important;
+	color: #ffffff !important;
 }
 
 .assassin-unrevealed {
-    border-color: #242424 !important;
-    background-color: #c0c0c0 !important;
+	border-color: #242424 !important;
+	background-color: #c0c0c0 !important;
 }
 
 .red-revealed {
-    background-color: #d15656 !important;
-    color: #ffffff !important;
+	background-color: #d15656 !important;
+	color: #ffffff !important;
 }
 
 .red-unrevealed {
-    border-color: #d15656 !important;
-    background-color: #ffe9e9 !important;
+	border-color: #d15656 !important;
+	background-color: #ffe9e9 !important;
 }
 
 .blue-revealed {
-    background-color: #5666d1 !important;
-    color: #ffffff !important;
+	background-color: #5666d1 !important;
+	color: #ffffff !important;
 }
 
 .blue-unrevealed {
-    border-color: #5666d1 !important;
-    background-color: #e6eaff !important;
+	border-color: #5666d1 !important;
+	background-color: #e6eaff !important;
 }
 
 .innocent-revealed {
-    background-color: #8c8c8c !important;
-    color: #ffffff !important;
+	background-color: #8c8c8c !important;
+	color: #ffffff !important;
 }
 
 .innocent-unrevealed {
-    border-color: #8c8c8c !important;
+	border-color: #8c8c8c !important;
 }
 
 .hidden {
-    display: none !important;
+	display: none !important;
 }
 
 input[type="text"] {
-    text-transform: lowercase;
+	text-transform: lowercase;
 }
 
 canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    pointer-events:none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
 }
 
 .circle {
-    display: inline-block;
-    width: 2em;
-    height: 2em;
-    border-radius: 50%;
-    padding-top: 0.2em;
+	display: inline-block;
+	width: 2em;
+	height: 2em;
+	border-radius: 50%;
+	padding-top: 0.2em;
 }
