@@ -1,8 +1,6 @@
 # Codenames
 
-Digital version of the Codenames board game.
-
-Live demo: [https://codenames.snoep.io](http://codenames.snoep.io)
+digital version of the Codenames boardgame, live demo at [https://codenames.snoep.io](http://codenames.snoep.io)
 
 ## Run locally
 ```bash
