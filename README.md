@@ -1,7 +1,17 @@
-Codenames
+# Codenames
 
-[live demo](http://codenames.snoep.io)
+Digital version of the Codenames board game.
 
-* install dependencies ```npm install```
-* run server locally ```npm start```
-* access webapp at ```localhost:8080```
+Live demo: [https://codenames.snoep.io](http://codenames.snoep.io)
+
+## Run locally
+```bash
+npm install
+npm start
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
