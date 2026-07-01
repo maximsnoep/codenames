@@ -28,6 +28,7 @@
 			class="toggleable"
 			style="position: fixed; top: 0; left: 0; margin: 20px"
 		>
+			<strong>Codenames</strong>
 			<span
 				style="cursor: pointer; z-index: 100"
 				onclick="toggleTooltip(this)"
@@ -48,76 +49,46 @@
 					padding: 1rem;
 					border: 1px solid #ccc;
 					border-radius: 0.5rem;
-					padding: 40px;
+					font-size: 0.9rem;
+					max-width: 28rem;
 				"
 				onmouseover="cancelHideTooltip()"
 				onmouseout="delayedHideTooltip()"
 			>
-				<p><strong>Game Rules:</strong></p>
+				<p><strong>Rules:</strong></p>
 				<ul>
 					<li>
-						Two teams:
+						Find all your team's words:
 						<span style="color: #d15656; font-weight: bold"
 							>Red</span
 						>
-						(9 words) &
+						has 9,
 						<span style="color: #5666d1; font-weight: bold"
 							>Blue</span
 						>
-						(8 words).
+						has 8.
 					</li>
+					<li>Spymasters give a one-word clue and a number.</li>
+					<li>Guessers may guess that many words, plus one extra.</li>
 					<li>
-						Each team has one Spymaster and one or more guessers.
-					</li>
-					<li>
-						Spymasters see all word colors and give a one-word clue
-						+ a number (e.g., "Skibidi 3").
-					</li>
-					<li>
-						The number indicates related words left; guessers may
-						guess up to one extra.
-					</li>
-					<li>
-						There is one
+						Wrong guesses end the turn; the
 						<span style="color: #242424; font-weight: bold"
 							>Assassin</span
 						>
-						word. If picked, that team loses immediately.
+						ends the game.
 					</li>
-					<li>
-						A wrong guess (picking a
-						<span style="color: #8c8c8c; font-weight: bold"
-							>Neutral</span
-						>
-						word or a word from the other team) ends the turn
-						immediately.
-					</li>
-					<li>
-						You can always pass guessing and give the turn to the
-						other team.
-					</li>
-					<li>The first team to find all their words wins.</li>
+					<li>You may pass instead of guessing.</li>
 				</ul>
 
-				<p><strong>Game Controls:</strong></p>
+				<p><strong>Controls:</strong></p>
 				<ul>
-					<li>The background color indicates whose turn it is.</li>
+					<li>First player in a room becomes admin.</li>
 					<li>
-						The first player in a room becomes
-						<strong>Admin</strong>.
+						Admins promote players by clicking names at the bottom.
 					</li>
-					<li>Admins can promote others by clicking their name.</li>
-					<li>Admins can select wordlists and reset the game.</li>
-					<li>
-						Admins can pass to skip guessing or manually switch
-						turns.
-					</li>
-					<li>Admins can click a word twice to reveal it.</li>
-					<li>
-						Admins can play as Spymasters, by seeing and sorting
-						card colors (only on their screen).
-					</li>
-					<li>Turns auto-pass after a wrong guess.</li>
+					<li>Admins are underlined; your own name is bolded.</li>
+					<li>Admins reveal a card by clicking it twice.</li>
+					<li>Colored/sorted view is only local to your screen.</li>
 				</ul>
 			</div>
 		</div>
@@ -163,10 +134,12 @@
 		>
 			<div
 				class="toggleable"
-				style="align-self: center; justify-self: center"
+				style="
+					align-self: center;
+					justify-self: center;
+					margin-top: 2rem;
+				"
 			>
-				<h3 style="margin: 1rem 0">Codenames</h3>
-
 				<div
 					style="
 						display: flex;
@@ -176,7 +149,7 @@
 					"
 				>
 					<div style="padding: 0 0.5rem">
-						<label for="user_name">user</label>
+						<label for="user_name">player</label>
 						<input
 							type="text"
 							id="user_name"
@@ -202,7 +175,6 @@
 							autocorrect="off"
 							autocapitalize="off"
 							spellcheck="false"
-							onkeydown="return /[a-z]/i.test(event.key);"
 						/>
 					</div>
 					<div style="padding: 0 0.5rem">
@@ -211,57 +183,58 @@
 				</div>
 
 				<br />
-				<div
-					class="hidden admin-controls"
-					style="
-						display: flex;
-						flex-wrap: wrap;
-						justify-content: center;
-						align-items: center;
-					"
-				>
-					<div style="padding: 0 0.5rem">
-						<input type="checkbox" id="colors" value="colors" />
-						<label for="colors">colored</label>
+				<div class="hidden admin-controls admin-control-columns">
+					<div class="admin-control-column">
+						<strong>Wordlist</strong>
+						<label>
+							<input type="checkbox" id="combine-wordlists" />
+							combination
+						</label>
+						<div class="wordlist-picker">
+							<div
+								class="wordlist-dropdown"
+								id="wordlist-dropdown"
+							>
+								<button
+									type="button"
+									id="wordlist-dropdown-button"
+									onclick="toggleWordlistDropdown()"
+								>
+									original
+								</button>
+								<div
+									id="wordlists"
+									class="wordlist-menu hidden"
+								></div>
+							</div>
+						</div>
+						<button onclick="resetGame()">reset</button>
 					</div>
-					<div style="padding: 0 0.5rem">
-						<input type="checkbox" id="sorted" value="sorted" />
-						<label for="sorted">sorted</label>
+					<div class="admin-control-column">
+						<strong>Rules</strong>
+						<label>
+							<input
+								type="checkbox"
+								id="assassin-toggle"
+								value="assassin-toggle"
+							/>
+							assassin
+						</label>
+						<label>
+							<input type="checkbox" id="timer-toggle" />
+							timer
+						</label>
 					</div>
-					<div style="padding: 0 0.5rem">
-						<input
-							type="checkbox"
-							id="assassin-toggle"
-							value="assassin-toggle"
-						/>
-						<label for="assassin-toggle">assassin?</label>
-					</div>
-					<div style="padding: 0 0.5rem">
-						<select id="wordlist"></select>
-					</div>
-					<div style="padding: 0 0.5rem">
-						<button
-							onclick="
-								if (
-									confirm(
-										'Are you sure you want to re-initialize the game?',
-									)
-								)
-									socket.emit(
-										'reinitGame',
-										document.getElementById('wordlist')
-											.value,
-										document.getElementById(
-											'assassin-toggle',
-										).checked,
-									);
-							"
-						>
-							reset
-						</button>
-					</div>
-					<div style="padding: 0 0.5rem">
-						<button onclick="socket.emit('next')">next</button>
+					<div class="admin-control-column">
+						<strong>View</strong>
+						<label>
+							<input type="checkbox" id="colors" value="colors" />
+							colored
+						</label>
+						<label>
+							<input type="checkbox" id="sorted" value="sorted" />
+							sorted
+						</label>
 					</div>
 				</div>
 			</div>

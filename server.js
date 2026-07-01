@@ -7,6 +7,7 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
+const WORDLIST_DIR = path.join(__dirname, "public", "wordlists");
 
 // serve all files in /public as static files
 app.use(express.static("public"));
@@ -15,8 +16,8 @@ server.listen(8080, () => {
 	console.log("Codenames is running on http://localhost:8080");
 });
 
-const CHECK_INTERVAL = 20; // seconds
-const TIMEOUT_LIMIT = 6; // Number of missed pings before kicking
+const CHECK_INTERVAL = 5; // seconds
+const INACTIVE_TIMEOUT = 30 * 1000; // milliseconds
 
 // Periodic Check to Remove Inactive Users
 setInterval(() => {
@@ -24,26 +25,78 @@ setInterval(() => {
 		`Currently active users: ${Object.keys(activeUsers).length}. Checking for inactive users.`,
 	);
 	Object.keys(activeUsers).forEach((userID) => {
-		if (activeUsers[userID]) {
-			activeUsers[userID].missedPings += 1;
-			if (activeUsers[userID].missedPings >= TIMEOUT_LIMIT) {
-				console.log(`User ${userID} removed due to inactivity.`);
-				room_manager.remove_user_from_all_rooms(userID);
-				delete activeUsers[userID];
-			} else {
-				io.to(activeUsers[userID].socketID).emit("ping"); // Ask for response
+		const user = activeUsers[userID];
+		if (!user) return;
+
+		if (user.disconnectedAt !== null) {
+			if (Date.now() - user.disconnectedAt >= INACTIVE_TIMEOUT) {
+				removeInactiveUser(userID, "disconnect timeout");
 			}
+			return;
+		}
+
+		user.missedPings += 1;
+		if (user.missedPings * CHECK_INTERVAL * 1000 >= INACTIVE_TIMEOUT) {
+			removeInactiveUser(userID, "missed ping timeout");
+		} else {
+			io.to(user.socketID).emit("ping"); // Ask for response
 		}
 	});
 }, CHECK_INTERVAL * 1000);
 
+function getAvailableWordlists() {
+	return fs
+		.readdirSync(WORDLIST_DIR)
+		.filter((file) => path.extname(file) === ".txt")
+		.map((file) => path.parse(file).name);
+}
+
+function getSelectedWordlists(wordLists) {
+	const requested = Array.isArray(wordLists) ? wordLists : [wordLists];
+	const available = new Set(getAvailableWordlists());
+	const selected = requested.filter(
+		(list) => typeof list === "string" && available.has(list),
+	);
+
+	if (selected.length > 0) {
+		return selected;
+	}
+	return available.has("original")
+		? ["original"]
+		: [getAvailableWordlists()[0]];
+}
+
+function loadWords(wordLists) {
+	const words = [];
+	const seen = new Set();
+
+	wordLists.forEach((wordList) => {
+		fs.readFileSync(path.join(WORDLIST_DIR, `${wordList}.txt`), "utf8")
+			.split(/\r?\n/)
+			.map((word) => word.trim())
+			.filter(Boolean)
+			.forEach((word) => {
+				const key = word.toLowerCase();
+				if (!seen.has(key)) {
+					seen.add(key);
+					words.push(word);
+				}
+			});
+	});
+
+	if (words.length < 25) {
+		throw new Error(
+			`Selected wordlists only contain ${words.length} unique words.`,
+		);
+	}
+
+	return words.sort(() => 0.5 - Math.random()).slice(0, 25);
+}
+
 const Game = class {
-	constructor(wordList, assassin) {
-		this.codenames = fs
-			.readFileSync(`public/wordlists/${wordList}.txt`, "utf8")
-			.split("\n")
-			.sort(() => 0.5 - Math.random())
-			.slice(0, 25);
+	constructor(wordLists, assassin) {
+		this.wordLists = getSelectedWordlists(wordLists);
+		this.codenames = loadWords(this.wordLists);
 		// assassin is coloring[0]
 		// red cards is coloring[1..9]
 		// blue cards is coloring[10..18]
@@ -56,7 +109,7 @@ const Game = class {
 		this.turnStart = Date.now();
 
 		console.log(
-			`GAME: Initialized with\n  wordlist: ${wordList}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}\n  assassin: ${this.assassin}\n`,
+			`GAME: Initialized with\n  wordlists: ${this.wordLists.join(", ")}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}\n  assassin: ${this.assassin}\n`,
 		);
 	}
 
@@ -168,6 +221,7 @@ const Room = class {
 		// How many members have EVER joined with each base name. Persists for
 		// the life of the room so numbers stay stable when members leave.
 		this.name_counts = {};
+		this.timerEnabled = true;
 		this.game = new Game("original", true);
 	}
 
@@ -269,7 +323,31 @@ const RoomManager = class {
 };
 
 const room_manager = new RoomManager();
-const activeUsers = {}; // Track { userID: { socketID, missedPings } }
+// Track { userID: { socketID, missedPings, disconnectedAt } }
+const activeUsers = {};
+
+function broadcastRoomUpdate(room_id) {
+	if (!room_manager.is_room(room_id)) {
+		return;
+	}
+	for (const user_id of Object.keys(room_manager.rooms[room_id].members)) {
+		if (activeUsers[user_id] === undefined) {
+			continue;
+		}
+		io.to(activeUsers[user_id].socketID).emit(
+			"roomUpdate",
+			room_manager.rooms[room_id],
+		);
+	}
+}
+
+function removeInactiveUser(userID, reason) {
+	const roomIDs = room_manager.rooms_of_user(userID);
+	console.log(`User ${userID} removed due to inactivity (${reason}).`);
+	room_manager.remove_user_from_all_rooms(userID);
+	delete activeUsers[userID];
+	roomIDs.forEach(broadcastRoomUpdate);
+}
 
 io.on("connection", (socket) => {
 	let currentID = null;
@@ -292,7 +370,11 @@ io.on("connection", (socket) => {
 			console.log(`ID [${currentID}] registered (socket: ${socket.id}).`);
 		}
 
-		activeUsers[currentID] = { socketID: socket.id, missedPings: 0 };
+		activeUsers[currentID] = {
+			socketID: socket.id,
+			missedPings: 0,
+			disconnectedAt: null,
+		};
 		io.to(socket.id).emit("return", currentID);
 
 		for (const room_id of room_manager.rooms_of_user(currentID)) {
@@ -302,14 +384,13 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("pong", () => {
-		if (currentID && activeUsers[currentID].socketID == socket.id) {
+		if (currentID && activeUsers[currentID]?.socketID === socket.id) {
 			activeUsers[currentID].missedPings = 0;
+			activeUsers[currentID].disconnectedAt = null;
 		}
 	});
 
-	let files = fs.readdirSync("./public/wordlists/");
-	files = files.map((f) => path.parse(f).name);
-	io.to(socket.id).emit("wordlistUpdate", files);
+	io.to(socket.id).emit("wordlistUpdate", getAvailableWordlists());
 
 	function update(room_id) {
 		if (!room_manager.is_room(room_id)) {
@@ -341,6 +422,9 @@ io.on("connection", (socket) => {
 		console.log(
 			`A connection disappeared! (socket: ${socket.id}, id: ${currentID}).`,
 		);
+		if (currentID && activeUsers[currentID]?.socketID === socket.id) {
+			activeUsers[currentID].disconnectedAt = Date.now();
+		}
 	});
 
 	socket.on("joinRoom", (dataObject) => {
@@ -378,6 +462,16 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("setTimerEnabled", (enabled) => {
+		for (const room_id of room_manager.rooms_of_admin(currentID)) {
+			room_manager.rooms[room_id].timerEnabled = Boolean(enabled);
+			console.log(
+				`<${currentID} @ ${room_id}> set timer to ${room_manager.rooms[room_id].timerEnabled}.`,
+			);
+			update(room_id);
+		}
+	});
+
 	socket.on("revealCards", (cards) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
 			console.log(`<${currentID} @ ${room_id}> revealed card ${cards}.`);
@@ -404,12 +498,13 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("reinitGame", (wordList, assassin) => {
+	socket.on("reinitGame", (wordLists, assassin) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
+			const selected = getSelectedWordlists(wordLists);
 			console.log(
-				`<${currentID} @ ${room_id}> reinits game with ${wordList}.`,
+				`<${currentID} @ ${room_id}> reinits game with ${selected.join(", ")}.`,
 			);
-			room_manager.rooms[room_id].game = new Game(wordList, assassin);
+			room_manager.rooms[room_id].game = new Game(selected, assassin);
 			update(room_id);
 		}
 	});

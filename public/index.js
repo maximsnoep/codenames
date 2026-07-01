@@ -8,17 +8,40 @@ let lastData = null;
 // Server-provided timestamp (ms) marking when the current turn started.
 let currentTurnStart = null;
 
+// Room-shared setting controlled by admins.
+let currentTimerEnabled = true;
+
 // --- Persistent settings (localStorage) ------------------------------------
 
 function loadSettings() {
 	const colors = localStorage.getItem("cn_colors") === "true";
 	const sorted = localStorage.getItem("cn_sorted") === "true";
-	const assassinRaw = localStorage.getItem("cn_assassin");
-	const assassin = assassinRaw === null ? true : assassinRaw === "true";
+	const assassin = true;
+	const timerRaw = localStorage.getItem("cn_timer");
+	const timer = timerRaw === null ? true : timerRaw === "true";
+	const combine = localStorage.getItem("cn_combine_wordlists") === "true";
 
-	document.getElementById("colors").checked = colors;
-	document.getElementById("sorted").checked = sorted;
-	document.getElementById("assassin-toggle").checked = assassin;
+	const colorsInput = document.getElementById("colors");
+	const sortedInput = document.getElementById("sorted");
+	const assassinInput = document.getElementById("assassin-toggle");
+	const timerInput = document.getElementById("timer-toggle");
+	const combineInput = document.getElementById("combine-wordlists");
+	if (
+		!colorsInput ||
+		!sortedInput ||
+		!assassinInput ||
+		!timerInput ||
+		!combineInput
+	)
+		return;
+
+	colorsInput.checked = colors;
+	sortedInput.checked = sorted;
+	assassinInput.checked = assassin;
+	timerInput.checked = timer;
+	currentTimerEnabled = timer;
+	combineInput.checked = combine;
+	updateWordlistMenuMode();
 }
 
 function saveSettings() {
@@ -30,8 +53,118 @@ function saveSettings() {
 		"cn_sorted",
 		document.getElementById("sorted").checked,
 	);
+
 	localStorage.setItem(
-		"cn_assassin",
+		"cn_timer",
+		document.getElementById("timer-toggle").checked,
+	);
+	localStorage.setItem(
+		"cn_combine_wordlists",
+		document.getElementById("combine-wordlists").checked,
+	);
+}
+
+function loadSelectedWordlists() {
+	try {
+		const selected = JSON.parse(
+			localStorage.getItem("cn_wordlists") || "[]",
+		);
+		if (Array.isArray(selected) && selected.length > 0) {
+			return selected;
+		}
+	} catch (error) {
+		console.warn("Could not load saved wordlists", error);
+	}
+	return ["original"];
+}
+
+function isCombiningWordlists() {
+	return document.getElementById("combine-wordlists").checked;
+}
+
+function getSelectedWordlists() {
+	return Array.from(
+		document.querySelectorAll("#wordlists input:checked"),
+	).map((input) => input.value);
+}
+
+function updateWordlistMenuMode() {
+	const menu = document.getElementById("wordlists");
+	if (!menu) return;
+
+	const combining = isCombiningWordlists();
+	Array.from(menu.querySelectorAll("input")).forEach((input) => {
+		input.type = combining ? "checkbox" : "radio";
+		if (combining) {
+			input.removeAttribute("name");
+		} else {
+			input.name = "wordlist";
+		}
+	});
+}
+
+function updateWordlistDropdownLabel() {
+	const button = document.getElementById("wordlist-dropdown-button");
+	if (!button) return;
+
+	const selected = getSelectedWordlists();
+	if (selected.length === 0) {
+		button.textContent = "select wordlist";
+	} else if (isCombiningWordlists() && selected.length > 1) {
+		button.textContent = `${selected.length} wordlists`;
+	} else {
+		button.textContent = selected[0];
+	}
+}
+
+function saveSelectedWordlists() {
+	localStorage.setItem(
+		"cn_wordlists",
+		JSON.stringify(getSelectedWordlists()),
+	);
+	updateWordlistDropdownLabel();
+}
+
+function closeWordlistDropdown() {
+	document.getElementById("wordlists")?.classList.add("hidden");
+}
+
+function toggleWordlistDropdown() {
+	document.getElementById("wordlists").classList.toggle("hidden");
+}
+
+function enforceSingleWordlistSelection(preferredInput = null) {
+	const inputs = Array.from(document.querySelectorAll("#wordlists input"));
+	let selected = inputs.filter((input) => input.checked);
+	let keep =
+		preferredInput && preferredInput.checked ? preferredInput : selected[0];
+
+	if (!keep && inputs.length > 0) {
+		keep = inputs.find((input) => input.value === "original") || inputs[0];
+		keep.checked = true;
+	}
+
+	inputs.forEach((input) => {
+		input.checked = input === keep;
+	});
+}
+
+function resetGame() {
+	let wordlists = getSelectedWordlists();
+	if (wordlists.length === 0) {
+		alert("Select at least one wordlist before resetting the game.");
+		return;
+	}
+	if (!confirm("Are you sure you want to re-initialize the game?")) {
+		return;
+	}
+	saveSelectedWordlists();
+	if (!isCombiningWordlists()) {
+		wordlists = wordlists[0];
+	}
+	socket.emit(
+		"reinitGame",
+		wordlists,
 		document.getElementById("assassin-toggle").checked,
 	);
 }
@@ -93,8 +226,9 @@ function resetRoom() {
 
 document.addEventListener("DOMContentLoaded", function () {
 	// restore the last used room/user, falling back to the defaults
+	const savedRoom = localStorage.getItem("cn_room");
 	document.getElementById("room_id").value =
-		localStorage.getItem("cn_room") || "theroom";
+		!savedRoom || savedRoom === "theroom" ? "hangout" : savedRoom;
 	document.getElementById("user_name").value =
 		localStorage.getItem("cn_user") || "mark";
 
@@ -107,6 +241,31 @@ document.addEventListener("DOMContentLoaded", function () {
 			saveSettings();
 			rerender();
 		});
+	});
+
+	document.getElementById("timer-toggle").addEventListener("change", () => {
+		currentTimerEnabled = document.getElementById("timer-toggle").checked;
+		saveSettings();
+		updateTimer();
+		socket.emit("setTimerEnabled", currentTimerEnabled);
+	});
+
+	document
+		.getElementById("combine-wordlists")
+		.addEventListener("change", () => {
+			updateWordlistMenuMode();
+			if (!isCombiningWordlists()) {
+				enforceSingleWordlistSelection();
+			}
+			saveSettings();
+			saveSelectedWordlists();
+		});
+
+	document.addEventListener("click", (event) => {
+		const dropdown = document.getElementById("wordlist-dropdown");
+		if (dropdown && !dropdown.contains(event.target)) {
+			closeWordlistDropdown();
+		}
 	});
 });
 
@@ -218,7 +377,10 @@ function getStats(data) {
 			revealed += 1;
 		}
 	}
-	return `<div style="text-align: center;"><span class="circle red-revealed">${9 - red}</span>&emsp;<span class="circle blue-revealed">${8 - blue}</span>&emsp;<span class="circle innocent-revealed">${7 - neutral}</span>&emsp;<span class="circle assassin-revealed">${1 - assassin}</span>&emsp;&emsp;<span id="timer" style="font-variant-numeric: tabular-nums;"></span></div>`;
+	const nextButton = data.members[currentID]?.admin
+		? `<button onclick="socket.emit('next')">next</button>`
+		: "";
+	return `<div class="stats-row"><span class="circle red-revealed">${9 - red}</span><span class="circle blue-revealed">${8 - blue}</span><span class="circle innocent-revealed">${7 - neutral}</span><span class="circle assassin-revealed">${1 - assassin}</span><span id="timer" class="turn-timer"></span>${nextButton}</div>`;
 }
 
 // --- Turn timer ------------------------------------------------------------
@@ -226,6 +388,12 @@ function getStats(data) {
 function updateTimer() {
 	const el = document.getElementById("timer");
 	if (!el) return;
+	if (!currentTimerEnabled) {
+		el.textContent = "";
+		el.classList.add("hidden");
+		return;
+	}
+	el.classList.remove("hidden");
 	if (currentTurnStart == null) {
 		el.textContent = "";
 		return;
@@ -350,20 +518,54 @@ socket.on("gameOver", (data) => {
 });
 
 socket.on("wordlistUpdate", (data) => {
-	let options = "";
+	const wordlists = document.getElementById("wordlists");
+	wordlists.innerHTML = "";
+
+	const saved = loadSelectedWordlists();
+	const selected = saved.filter((list) => data.includes(list));
+	if (selected.length === 0 && data.includes("original")) {
+		selected.push("original");
+	}
+
 	data.forEach((list) => {
-		if (list === "original") {
-			options += `<option value="${list}" selected>${list}</option>`;
-		} else {
-			options += `<option value="${list}">${list}</option>`;
+		const label = document.createElement("label");
+		label.className = "wordlist-option";
+
+		const input = document.createElement("input");
+		input.type = isCombiningWordlists() ? "checkbox" : "radio";
+		if (!isCombiningWordlists()) {
+			input.name = "wordlist";
 		}
+		input.value = list;
+		input.checked = selected.includes(list);
+		input.addEventListener("change", () => {
+			if (!isCombiningWordlists()) {
+				input.checked = true;
+				enforceSingleWordlistSelection(input);
+				closeWordlistDropdown();
+			}
+			saveSelectedWordlists();
+		});
+
+		const text = document.createElement("span");
+		text.textContent = list;
+
+		label.append(input, text);
+		wordlists.appendChild(label);
 	});
-	document.getElementById("wordlist").innerHTML = options;
+
+	updateWordlistMenuMode();
+	if (!isCombiningWordlists()) {
+		enforceSingleWordlistSelection();
+	}
+	saveSelectedWordlists();
 	adjustFontSize();
 });
 
 socket.on("roomUpdate", (data) => {
 	lastData = data;
+	currentTimerEnabled = data.timerEnabled !== false;
+	document.getElementById("timer-toggle").checked = currentTimerEnabled;
 
 	// show grid
 	let sorted = document.getElementById("sorted").checked;
