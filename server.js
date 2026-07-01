@@ -66,6 +66,15 @@ function getSelectedWordlists(wordLists) {
 		: [getAvailableWordlists()[0]];
 }
 
+function shuffle(items) {
+	const shuffled = [...items];
+	for (let i = shuffled.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+	}
+	return shuffled;
+}
+
 function loadWords(wordLists) {
 	const words = [];
 	const seen = new Set();
@@ -90,7 +99,7 @@ function loadWords(wordLists) {
 		);
 	}
 
-	return words.sort(() => 0.5 - Math.random()).slice(0, 25);
+	return shuffle(words).slice(0, 25);
 }
 
 const Game = class {
@@ -101,7 +110,7 @@ const Game = class {
 		// red cards is coloring[1..9]
 		// blue cards is coloring[10..18]
 		// neutral is coloring[19..25]
-		this.coloring = [...Array(25).keys()].sort(() => 0.5 - Math.random());
+		this.coloring = shuffle([...Array(25).keys()]);
 		this.revealed = Array(25).fill(false);
 		this.current = "red";
 		this.over = false;

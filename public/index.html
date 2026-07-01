@@ -20,76 +20,83 @@
 		<script src="/index.js"></script>
 		<script src="/particles.js"></script>
 
-		<div style="position: fixed; bottom: 0; right: 0; margin: 20px">
-			<button style="font-size: 1rem" onclick="toggle()">&#x26F6;</button>
-		</div>
+		<div class="app-header">
+			<div class="toggleable app-title">
+				<strong>codenames</strong>
+				<span
+					class="info-trigger"
+					style="cursor: pointer; z-index: 100"
+					onclick="toggleTooltip(this)"
+					onmouseover="showTooltip(this)"
+					onmouseout="delayedHideTooltip()"
+				>
+					&#9432;
+				</span>
+				<div
+					class="tooltip-content"
+					style="
+						display: none;
+						position: absolute;
+						top: 100%;
+						left: 0;
+						margin-top: 0.5rem;
+						z-index: 99;
+						background-color: #f5f5f5;
+						padding: 1rem;
+						border: 1px solid #ccc;
+						border-radius: 0.5rem;
+						font-size: 0.9rem;
+						max-width: 28rem;
+					"
+					onmouseover="cancelHideTooltip()"
+					onmouseout="delayedHideTooltip()"
+				>
+					<p><strong>Rules:</strong></p>
+					<ul>
+						<li>
+							Find all your team's words:
+							<span style="color: #d15656; font-weight: bold"
+								>Red</span
+							>
+							has 9,
+							<span style="color: #5666d1; font-weight: bold"
+								>Blue</span
+							>
+							has 8.
+						</li>
+						<li>Spymasters give a one-word clue and a number.</li>
+						<li>
+							Guessers may guess that many words, plus one extra.
+						</li>
+						<li>
+							Wrong guesses end the turn; the
+							<span style="color: #242424; font-weight: bold"
+								>Assassin</span
+							>
+							ends the game.
+						</li>
+						<li>You may pass instead of guessing.</li>
+					</ul>
 
-		<div
-			class="toggleable"
-			style="position: fixed; top: 0; left: 0; margin: 20px"
-		>
-			<strong>Codenames</strong>
-			<span
-				style="cursor: pointer; z-index: 100"
-				onclick="toggleTooltip(this)"
-				onmouseover="showTooltip(this)"
-			>
-				&#9432;
-			</span>
-			<div
-				class="tooltip-content"
-				style="
-					display: none;
-					position: fixed;
-					top: 0;
-					left: 0;
-					margin: 20px;
-					z-index: 99;
-					background-color: #f5f5f5;
-					padding: 1rem;
-					border: 1px solid #ccc;
-					border-radius: 0.5rem;
-					font-size: 0.9rem;
-					max-width: 28rem;
-				"
-				onmouseover="cancelHideTooltip()"
-				onmouseout="delayedHideTooltip()"
-			>
-				<p><strong>Rules:</strong></p>
-				<ul>
-					<li>
-						Find all your team's words:
-						<span style="color: #d15656; font-weight: bold"
-							>Red</span
-						>
-						has 9,
-						<span style="color: #5666d1; font-weight: bold"
-							>Blue</span
-						>
-						has 8.
-					</li>
-					<li>Spymasters give a one-word clue and a number.</li>
-					<li>Guessers may guess that many words, plus one extra.</li>
-					<li>
-						Wrong guesses end the turn; the
-						<span style="color: #242424; font-weight: bold"
-							>Assassin</span
-						>
-						ends the game.
-					</li>
-					<li>You may pass instead of guessing.</li>
-				</ul>
-
-				<p><strong>Controls:</strong></p>
-				<ul>
-					<li>First player in a room becomes admin.</li>
-					<li>
-						Admins promote players by clicking names at the bottom.
-					</li>
-					<li>Admins are underlined; your own name is bolded.</li>
-					<li>Admins reveal a card by clicking it twice.</li>
-					<li>Colored/sorted view is only local to your screen.</li>
-				</ul>
+					<p><strong>Controls:</strong></p>
+					<ul>
+						<li>First player in a room becomes admin.</li>
+						<li>
+							Admins promote players by clicking names at the
+							bottom.
+						</li>
+						<li>Admins are underlined; your own name is bolded.</li>
+						<li>Admins reveal a card by clicking it twice.</li>
+						<li>
+							Colored/sorted view is only local to your screen.
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div id="fullscreen-control" class="hidden app-fullscreen">
+				<button style="font-size: 1rem" onclick="toggle()">
+					&#x26F6;
+				</button>
 			</div>
 		</div>
 
@@ -108,6 +115,11 @@
 				} else {
 					showTooltip(element);
 				}
+			}
+
+			function closeTooltip() {
+				const tooltip = document.querySelector(".tooltip-content");
+				if (tooltip) tooltip.style.display = "none";
 			}
 
 			function delayedHideTooltip() {
@@ -134,11 +146,7 @@
 		>
 			<div
 				class="toggleable"
-				style="
-					align-self: center;
-					justify-self: center;
-					margin-top: 2rem;
-				"
+				style="align-self: center; justify-self: center"
 			>
 				<div
 					style="
@@ -178,7 +186,7 @@
 						/>
 					</div>
 					<div style="padding: 0 0.5rem">
-						<button onclick="joinRoom()">join</button>
+						<button onclick="joinRoom()">enter</button>
 					</div>
 				</div>
 
@@ -234,6 +242,27 @@
 						<label>
 							<input type="checkbox" id="sorted" value="sorted" />
 							sorted
+						</label>
+					</div>
+				</div>
+				<div class="hidden rules-readonly admin-control-columns">
+					<div class="admin-control-column">
+						<strong>Rules</strong>
+						<label>
+							<input
+								type="checkbox"
+								id="assassin-readonly"
+								disabled
+							/>
+							assassin
+						</label>
+						<label>
+							<input
+								type="checkbox"
+								id="timer-readonly"
+								disabled
+							/>
+							timer
 						</label>
 					</div>
 				</div>

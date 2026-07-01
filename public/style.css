@@ -12,6 +12,10 @@ body {
 	user-select: none;
 }
 
+#grid-container {
+	box-sizing: border-box;
+}
+
 div.grid-item {
 	background-color: #ffffff;
 	border: 2px solid #ccc;
@@ -84,6 +88,32 @@ div.grid-item[highlighted] {
 
 input[type="text"] {
 	text-transform: lowercase;
+}
+
+.app-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	padding: 0.5rem 1rem 0;
+}
+
+.app-title {
+	position: relative;
+	width: fit-content;
+	text-align: left;
+}
+
+.app-fullscreen {
+	margin-left: 1rem;
+}
+
+.app-header.fullscreen-active {
+	justify-content: flex-end;
+}
+
+.tooltip-content {
+	width: min(34rem, calc(100vw - 2rem));
+	text-align: left;
 }
 
 .tooltip-content p {
@@ -166,6 +196,53 @@ input[type="text"] {
 	gap: 0.35rem;
 	white-space: nowrap;
 	cursor: pointer;
+}
+
+@media (max-width: 600px) {
+	.app-header {
+		align-items: center;
+		padding-bottom: 0.75rem;
+	}
+
+	.tooltip-content {
+		left: 50% !important;
+		transform: translateX(-50%);
+		width: calc(100vw - 2rem);
+		max-width: 28rem;
+	}
+
+	.admin-control-columns {
+		width: calc(100vw - 2rem);
+		max-width: 24rem;
+		gap: 0.3rem;
+	}
+
+	.admin-control-column {
+		width: 100%;
+		flex-wrap: wrap;
+		gap: 0.35rem 0.5rem;
+	}
+
+	.admin-control-column strong {
+		min-width: 4rem;
+	}
+
+	#wordlist-dropdown-button {
+		min-width: 6.5rem;
+		max-width: 45vw;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.wordlist-menu {
+		max-width: calc(100vw - 2rem);
+	}
+
+	.stats-row {
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
 }
 
 canvas {

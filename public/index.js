@@ -210,11 +210,17 @@ socket.on("return", (data) => {
 });
 
 function resetRoom() {
+	document.getElementById("fullscreen-control").classList.add("hidden");
 	document.getElementById("grid-container").innerHTML = "";
 	document.getElementById("stats-lower").innerHTML = "";
 	document.body.style.backgroundColor = "#f5f5f5";
 	document.getElementById("room_info").innerHTML = "";
 	Array.from(document.getElementsByClassName("admin-controls")).forEach(
+		(o) => {
+			o.classList.add("hidden");
+		},
+	);
+	Array.from(document.getElementsByClassName("rules-readonly")).forEach(
 		(o) => {
 			o.classList.add("hidden");
 		},
@@ -445,12 +451,24 @@ function adjustFontSize() {
 	});
 }
 
-let toggle_var = false;
+function setFullscreenGridHeight() {
+	const grid = document.getElementById("grid-container");
+	const stats = document.getElementById("stats-lower");
+	const gridTop = grid.getBoundingClientRect().top;
+	const statsHeight = stats.getBoundingClientRect().height;
+	const bottomBuffer = 8;
+	const availableHeight =
+		window.innerHeight - gridTop - statsHeight - bottomBuffer;
+	grid.style.height = `${Math.max(0, availableHeight)}px`;
+}
+
+let toggle_var = true;
 function toggle() {
 	if (toggle_var) {
-		// for all in document.getElementsByClassName('toggleable'), set display to 'none'
+		// Hide controls, but keep the Codenames title visible in fullscreen.
 		Array.from(document.getElementsByClassName("toggleable")).forEach(
 			(o) => {
+				if (o.classList.contains("app-title")) return;
 				o.style.old_display = o.style.display;
 				o.style.display = "none";
 				Array.from(o.querySelectorAll("*")).forEach((c) => {
@@ -459,7 +477,9 @@ function toggle() {
 				});
 			},
 		);
-		document.getElementById("grid-container").style.height = "94vmin";
+		document.querySelector(".info-trigger")?.classList.add("hidden");
+		closeTooltip();
+		setFullscreenGridHeight();
 		toggle_var = false;
 	} else {
 		// for all in document.getElementsByClassName('toggleable'), set display to ''
@@ -471,6 +491,7 @@ function toggle() {
 				});
 			},
 		);
+		document.querySelector(".info-trigger")?.classList.remove("hidden");
 		document.getElementById("grid-container").style.height = "70vmin";
 		toggle_var = true;
 	}
@@ -479,7 +500,12 @@ function toggle() {
 
 // Call the function when the page loads and when the window resizes
 window.onload = adjustFontSize;
-window.onresize = adjustFontSize;
+window.onresize = () => {
+	if (!toggle_var) {
+		setFullscreenGridHeight();
+	}
+	adjustFontSize();
+};
 window.addEventListener("orientationchange", (event) => {
 	adjustFontSize;
 });
@@ -564,8 +590,13 @@ socket.on("wordlistUpdate", (data) => {
 
 socket.on("roomUpdate", (data) => {
 	lastData = data;
+	document.getElementById("fullscreen-control").classList.remove("hidden");
 	currentTimerEnabled = data.timerEnabled !== false;
+	const assassinEnabled = data.game.assassin !== false;
 	document.getElementById("timer-toggle").checked = currentTimerEnabled;
+	document.getElementById("timer-readonly").checked = currentTimerEnabled;
+	document.getElementById("assassin-toggle").checked = assassinEnabled;
+	document.getElementById("assassin-readonly").checked = assassinEnabled;
 
 	// show grid
 	let sorted = document.getElementById("sorted").checked;
@@ -626,17 +657,27 @@ socket.on("roomUpdate", (data) => {
 		});
 	});
 
-	// show admin controls
+	// show admin controls, or read-only shared rules for non-admins
 	if (data.members[currentID].admin) {
 		Array.from(document.getElementsByClassName("admin-controls")).forEach(
 			(o) => {
 				o.classList.remove("hidden");
 			},
 		);
+		Array.from(document.getElementsByClassName("rules-readonly")).forEach(
+			(o) => {
+				o.classList.add("hidden");
+			},
+		);
 	} else {
 		Array.from(document.getElementsByClassName("admin-controls")).forEach(
 			(o) => {
 				o.classList.add("hidden");
+			},
+		);
+		Array.from(document.getElementsByClassName("rules-readonly")).forEach(
+			(o) => {
+				o.classList.remove("hidden");
 			},
 		);
 	}
