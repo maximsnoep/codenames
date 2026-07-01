@@ -240,7 +240,111 @@ button:active {
 }
 
 .turn-timer {
+	display: inline-block;
 	font-variant-numeric: tabular-nums;
+}
+
+.timer-shake-low {
+	animation: timer-shake-low 0.55s infinite;
+}
+
+.timer-shake-medium {
+	animation: timer-shake-medium 0.28s infinite;
+}
+
+.timer-shake-high {
+	animation: timer-shake-high 0.13s infinite;
+}
+
+.timer-dead {
+	position: relative;
+}
+
+.timer-dead::after {
+	content: attr(data-zzz);
+	position: absolute;
+	left: calc(100% + var(--zzz-x, 0.2em));
+	top: var(--zzz-y, -0.65em);
+	font-size: 0.75em;
+	white-space: nowrap;
+	opacity: 0;
+	animation: timer-zzz 21.6s infinite ease-in-out;
+}
+
+@keyframes timer-shake-low {
+	0%,
+	100% {
+		transform: translate(0, 0) rotate(0deg);
+	}
+	25% {
+		transform: translate(0.5px, -0.5px) rotate(-0.5deg);
+	}
+	50% {
+		transform: translate(-0.5px, 0.5px) rotate(0.5deg);
+	}
+	75% {
+		transform: translate(0.5px, 0.5px) rotate(-0.25deg);
+	}
+}
+
+@keyframes timer-shake-medium {
+	0%,
+	100% {
+		transform: translate(0, 0) rotate(0deg);
+	}
+	20% {
+		transform: translate(-1.5px, 1px) rotate(-2deg);
+	}
+	40% {
+		transform: translate(1.5px, -1px) rotate(2deg);
+	}
+	60% {
+		transform: translate(-1px, -1.5px) rotate(-1.5deg);
+	}
+	80% {
+		transform: translate(1px, 1.5px) rotate(1.5deg);
+	}
+}
+
+@keyframes timer-shake-high {
+	0%,
+	100% {
+		transform: translate(0, 0) rotate(0deg) scale(1);
+	}
+	15% {
+		transform: translate(-4px, 2px) rotate(-7deg) scale(1.04);
+	}
+	30% {
+		transform: translate(3px, -3px) rotate(6deg) scale(0.98);
+	}
+	45% {
+		transform: translate(-2px, -4px) rotate(-9deg) scale(1.06);
+	}
+	60% {
+		transform: translate(4px, 3px) rotate(8deg) scale(0.97);
+	}
+	75% {
+		transform: translate(-5px, 4px) rotate(-5deg) scale(1.03);
+	}
+	90% {
+		transform: translate(3px, -2px) rotate(9deg) scale(1.01);
+	}
+}
+
+@keyframes timer-zzz {
+	0% {
+		opacity: 0;
+		transform: translateY(0);
+	}
+	8% {
+		opacity: 0.75;
+		transform: translateY(-1em);
+	}
+	70%,
+	100% {
+		opacity: 0;
+		transform: translateY(-1.5em);
+	}
 }
 
 .wordlist-picker {

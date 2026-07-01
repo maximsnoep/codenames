@@ -268,14 +268,23 @@ document.addEventListener("DOMContentLoaded", function () {
 		.getElementById("codenames-title")
 		.addEventListener("click", triggerHiddenWinAnimation);
 
-	// Wire settings toggles exactly once. Each change persists the setting and
+	// Wire local view toggles exactly once. Each change persists the setting and
 	// re-renders the current board.
-	["colors", "sorted", "assassin-toggle"].forEach((id) => {
+	["colors", "sorted"].forEach((id) => {
 		document.getElementById(id).addEventListener("change", () => {
 			saveSettings();
 			rerender();
 		});
 	});
+
+	document
+		.getElementById("assassin-toggle")
+		.addEventListener("change", () => {
+			const assassinEnabled =
+				document.getElementById("assassin-toggle").checked;
+			rerender();
+			socket.emit("setAssassinEnabled", assassinEnabled);
+		});
 
 	document.getElementById("timer-toggle").addEventListener("change", () => {
 		currentTimerEnabled = document.getElementById("timer-toggle").checked;
@@ -419,17 +428,69 @@ function getStats(data) {
 
 // --- Turn timer ------------------------------------------------------------
 
+let lastZzzCycle = -1;
+
+function updateSleepyZzz(el, elapsed) {
+	const cycle = Math.floor((elapsed - 20 * 60) / 21.6);
+	if (cycle === lastZzzCycle) return;
+	lastZzzCycle = cycle;
+
+	const phrases = ["...zzz", "...zzzZZZ", "..zzZZzz"];
+	const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+	const x = (Math.random() * 0.5).toFixed(2);
+	const y = (-0.9 + Math.random() * 0.7).toFixed(2);
+
+	el.dataset.zzz = phrase;
+	el.style.setProperty("--zzz-x", `${x}em`);
+	el.style.setProperty("--zzz-y", `${y}em`);
+}
+
+function clearSleepyZzz(el) {
+	delete el.dataset.zzz;
+	el.style.removeProperty("--zzz-x");
+	el.style.removeProperty("--zzz-y");
+	lastZzzCycle = -1;
+}
+
+function updateTimerShake(el, elapsed) {
+	el.classList.remove(
+		"timer-shake-low",
+		"timer-shake-medium",
+		"timer-shake-high",
+		"timer-dead",
+	);
+
+	if (elapsed >= 20 * 60) {
+		el.classList.add("timer-dead");
+		updateSleepyZzz(el, elapsed);
+	} else {
+		clearSleepyZzz(el);
+	}
+
+	if (elapsed >= 20 * 60) {
+		return;
+	} else if (elapsed >= 15 * 60) {
+		el.classList.add("timer-shake-high");
+	} else if (elapsed >= 10 * 60) {
+		el.classList.add("timer-shake-medium");
+	} else if (elapsed >= 5 * 60) {
+		el.classList.add("timer-shake-low");
+	}
+}
+
 function updateTimer() {
 	const el = document.getElementById("timer");
 	if (!el) return;
 	if (!currentTimerEnabled) {
 		el.textContent = "";
 		el.classList.add("hidden");
+		updateTimerShake(el, 0);
 		return;
 	}
 	el.classList.remove("hidden");
 	if (currentTurnStart == null) {
 		el.textContent = "";
+		updateTimerShake(el, 0);
 		return;
 	}
 	let elapsed = Math.floor((Date.now() - currentTurnStart) / 1000);
@@ -437,6 +498,7 @@ function updateTimer() {
 	const m = Math.floor(elapsed / 60);
 	const s = elapsed % 60;
 	el.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+	updateTimerShake(el, elapsed);
 }
 
 setInterval(updateTimer, 250);
@@ -629,7 +691,7 @@ socket.on("roomUpdate", (data) => {
 	lastData = data;
 	document.getElementById("fullscreen-control").classList.remove("hidden");
 	currentTimerEnabled = data.timerEnabled !== false;
-	const assassinEnabled = data.game.assassin !== false;
+	const assassinEnabled = data.assassinEnabled !== false;
 	document.getElementById("timer-toggle").checked = currentTimerEnabled;
 	document.getElementById("timer-readonly").checked = currentTimerEnabled;
 	document.getElementById("assassin-toggle").checked = assassinEnabled;

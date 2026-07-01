@@ -230,8 +230,9 @@ const Room = class {
 		// How many members have EVER joined with each base name. Persists for
 		// the life of the room so numbers stay stable when members leave.
 		this.name_counts = {};
+		this.assassinEnabled = true;
 		this.timerEnabled = true;
-		this.game = new Game("original", true);
+		this.game = new Game("original", this.assassinEnabled);
 	}
 
 	// member management
@@ -481,6 +482,18 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("setAssassinEnabled", (enabled) => {
+		for (const room_id of room_manager.rooms_of_admin(currentID)) {
+			const assassinEnabled = Boolean(enabled);
+			room_manager.rooms[room_id].assassinEnabled = assassinEnabled;
+			room_manager.rooms[room_id].game.assassin = assassinEnabled;
+			console.log(
+				`<${currentID} @ ${room_id}> set assassin to ${assassinEnabled}.`,
+			);
+			update(room_id);
+		}
+	});
+
 	socket.on("revealCards", (cards) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
 			console.log(`<${currentID} @ ${room_id}> revealed card ${cards}.`);
@@ -513,7 +526,11 @@ io.on("connection", (socket) => {
 			console.log(
 				`<${currentID} @ ${room_id}> reinits game with ${selected.join(", ")}.`,
 			);
-			room_manager.rooms[room_id].game = new Game(selected, assassin);
+			room_manager.rooms[room_id].assassinEnabled = Boolean(assassin);
+			room_manager.rooms[room_id].game = new Game(
+				selected,
+				room_manager.rooms[room_id].assassinEnabled,
+			);
 			update(room_id);
 		}
 	});
