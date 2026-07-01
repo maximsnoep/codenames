@@ -671,7 +671,7 @@ socket.on("wordlistUpdate", (data) => {
 		},
 		{
 			title: "chaos",
-			lists: ["countries", "european", "colors", "emoji"],
+			lists: ["countries", "europe", "colors", "emoji"],
 		},
 	];
 
