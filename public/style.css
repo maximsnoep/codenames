@@ -442,6 +442,42 @@ button:active {
 	}
 }
 
+@media (max-width: 360px) {
+	.login-controls {
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.login-controls > div {
+		padding: 0 !important;
+	}
+
+	.admin-control-columns,
+	.rules-readonly {
+		align-items: stretch;
+		max-width: calc(100vw - 2rem);
+	}
+
+	.admin-control-column {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.25rem;
+	}
+
+	.admin-control-column strong {
+		min-width: 0;
+		text-align: left;
+	}
+
+	.admin-control-column label,
+	.admin-control-column button,
+	.wordlist-picker,
+	.wordlist-dropdown,
+	#wordlist-dropdown-button {
+		width: 100%;
+	}
+}
+
 canvas {
 	position: fixed;
 	top: 0;
