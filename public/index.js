@@ -467,13 +467,13 @@ function updateTimerShake(el, elapsed) {
 		clearSleepyZzz(el);
 	}
 
-	if (elapsed >= 20 * 60) {
+	if (elapsed >= 10 * 60) {
 		return;
-	} else if (elapsed >= 15 * 60) {
+	} else if (elapsed >= 8 * 60) {
 		el.classList.add("timer-shake-high");
-	} else if (elapsed >= 10 * 60) {
-		el.classList.add("timer-shake-medium");
 	} else if (elapsed >= 5 * 60) {
+		el.classList.add("timer-shake-medium");
+	} else if (elapsed >= 2 * 60) {
 		el.classList.add("timer-shake-low");
 	}
 }
