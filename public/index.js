@@ -665,12 +665,13 @@ socket.on("wordlistUpdate", (data) => {
 				"halloween",
 				"geometry",
 				"na’vi",
+				"genz",
 				"theroom",
 			],
 		},
 		{
 			title: "chaos",
-			lists: ["countries", "colors", "genz", "emoji"],
+			lists: ["countries", "european", "colors", "emoji"],
 		},
 	];
 
