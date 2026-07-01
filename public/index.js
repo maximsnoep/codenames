@@ -329,7 +329,7 @@ function buildGrid(data, admin, sorted) {
 	}
 
 	for (let i of word_indices) {
-		let str = data.game.codenames[i];
+		let str = data.game.codenames[i].toUpperCase();
 		let index = data.game.coloring.indexOf(i);
 		// assassin is coloring[0]
 		// red cards is coloring[1..9]
@@ -652,7 +652,35 @@ socket.on("wordlistUpdate", (data) => {
 		selected.push("original");
 	}
 
-	data.forEach((list) => {
+	const groups = [
+		{
+			title: "official",
+			lists: ["original", "duet", "undercover", "german"],
+		},
+		{
+			title: "custom",
+			lists: [
+				"dutch",
+				"german2",
+				"halloween",
+				"geometry",
+				"na’vi",
+				"theroom",
+			],
+		},
+		{
+			title: "chaos",
+			lists: ["countries", "colors", "genz", "emoji"],
+		},
+	];
+
+	const listed = new Set(groups.flatMap((group) => group.lists));
+	const remaining = data.filter((list) => !listed.has(list));
+	if (remaining.length > 0) {
+		groups.push({ title: "other", lists: remaining });
+	}
+
+	const addWordlistOption = (list) => {
 		const label = document.createElement("label");
 		label.className = "wordlist-option";
 
@@ -677,6 +705,20 @@ socket.on("wordlistUpdate", (data) => {
 
 		label.append(input, text);
 		wordlists.appendChild(label);
+	};
+
+	groups.forEach((group) => {
+		const availableLists = group.lists.filter((list) =>
+			data.includes(list),
+		);
+		if (availableLists.length === 0) return;
+
+		const title = document.createElement("div");
+		title.className = "wordlist-group-title";
+		title.textContent = group.title;
+		wordlists.appendChild(title);
+
+		availableLists.forEach(addWordlistOption);
 	});
 
 	updateWordlistMenuMode();

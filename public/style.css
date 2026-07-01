@@ -387,6 +387,17 @@ button:active {
 	box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
 }
 
+.wordlist-group-title {
+	margin-top: 0.25rem;
+	font-size: 0.8em;
+	font-weight: bold;
+	color: #555555;
+}
+
+.wordlist-group-title:first-child {
+	margin-top: 0;
+}
+
 .wordlist-option {
 	display: inline-flex;
 	align-items: center;
