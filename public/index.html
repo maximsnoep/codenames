@@ -22,7 +22,7 @@
 
 		<div class="app-header">
 			<div class="toggleable app-title">
-				<strong>codenames</strong>
+				<strong id="codenames-title">codenames</strong>
 				<span
 					class="info-trigger"
 					style="cursor: pointer; z-index: 100"
@@ -94,7 +94,7 @@
 				</div>
 			</div>
 			<div id="fullscreen-control" class="hidden app-fullscreen">
-				<button style="font-size: 1rem" onclick="toggle()">
+				<button class="fullscreen-button" onclick="toggle()">
 					&#x26F6;
 				</button>
 			</div>
@@ -186,7 +186,9 @@
 						/>
 					</div>
 					<div style="padding: 0 0.5rem">
-						<button onclick="joinRoom()">enter</button>
+						<button class="compact-button" onclick="joinRoom()">
+							enter
+						</button>
 					</div>
 				</div>
 
@@ -216,7 +218,9 @@
 							<input type="checkbox" id="combine-wordlists" />
 							combination
 						</label>
-						<button onclick="resetGame()">reset</button>
+						<button class="compact-button" onclick="resetGame()">
+							reset
+						</button>
 					</div>
 					<div class="admin-control-column">
 						<strong>Rules</strong>

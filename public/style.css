@@ -19,6 +19,7 @@ body {
 div.grid-item {
 	background-color: #ffffff;
 	border: 2px solid #ccc;
+	border-radius: 0.35rem;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -87,7 +88,67 @@ div.grid-item[highlighted] {
 }
 
 input[type="text"] {
+	box-sizing: border-box;
+	padding: 0.08rem 0.5rem;
+	border: 1px solid #aaa;
+	border-radius: 0.35rem;
+	background-color: #ffffff;
+	color: #242424;
+	font: inherit;
+	line-height: 1.25;
 	text-transform: lowercase;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+	position: relative;
+	top: 0.08em;
+	box-sizing: border-box;
+	width: 1em;
+	height: 1em;
+	border: 1px solid #aaa;
+	background-color: #ffffff;
+	appearance: none;
+}
+
+input[type="checkbox"] {
+	border-radius: 0.18em;
+}
+
+input[type="radio"] {
+	border-radius: 50%;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+	background-color: #555555;
+	box-shadow: inset 0 0 0 2px #ffffff;
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+	opacity: 0.6;
+}
+
+button {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.1rem 0.5rem;
+	border: 1px solid #aaa;
+	border-radius: 0.35rem;
+	background-color: #ffffff;
+	color: #242424;
+	font: inherit;
+	line-height: 1.2;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #eeeeee;
+}
+
+button:active {
+	background-color: #dddddd;
 }
 
 .app-header {
@@ -105,6 +166,24 @@ input[type="text"] {
 
 .app-fullscreen {
 	margin-left: 1rem;
+}
+
+.fullscreen-button {
+	width: 1.25rem;
+	height: 1.25rem;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	font-size: 1rem;
+	line-height: 1;
+	cursor: pointer;
+	appearance: none;
+}
+
+.fullscreen-button:hover,
+.fullscreen-button:active {
+	background: transparent;
 }
 
 .app-header.fullscreen-active {
@@ -141,6 +220,13 @@ input[type="text"] {
 	gap: 0.5rem;
 }
 
+.admin-control-column label,
+.wordlist-option {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+}
+
 .admin-control-column strong {
 	min-width: 4.5rem;
 	text-align: right;
@@ -169,7 +255,14 @@ input[type="text"] {
 
 #wordlist-dropdown-button {
 	min-width: 8rem;
+	padding: 0.08rem 0.5rem;
+	line-height: 1.25;
 	text-align: left;
+}
+
+.compact-button {
+	padding: 0.05rem 0.5rem 0.15rem;
+	line-height: 1.1;
 }
 
 .wordlist-menu {
@@ -191,9 +284,9 @@ input[type="text"] {
 }
 
 .wordlist-option {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 0.35rem;
+	gap: 0.2rem;
 	white-space: nowrap;
 	cursor: pointer;
 }

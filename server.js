@@ -525,4 +525,12 @@ io.on("connection", (socket) => {
 			update(room_id);
 		}
 	});
+
+	socket.on("forceWin", () => {
+		for (const room_id of room_manager.rooms_of_admin(currentID)) {
+			const current = room_manager.rooms[room_id].game.current;
+			console.log(`<${currentID} @ ${room_id}> forced win animation.`);
+			io.to(room_id).emit("forceWin", current);
+		}
+	});
 });

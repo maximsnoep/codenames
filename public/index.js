@@ -11,6 +11,9 @@ let currentTurnStart = null;
 // Room-shared setting controlled by admins.
 let currentTimerEnabled = true;
 
+let titleClickCount = 0;
+let titleClickTimeout = null;
+
 // --- Persistent settings (localStorage) ------------------------------------
 
 function loadSettings() {
@@ -209,6 +212,27 @@ socket.on("return", (data) => {
 	loadSettings();
 });
 
+function isCurrentUserAdmin() {
+	return Boolean(lastData?.members?.[currentID]?.admin);
+}
+
+function triggerHiddenWinAnimation() {
+	clearTimeout(titleClickTimeout);
+	titleClickCount += 1;
+
+	if (titleClickCount >= 5) {
+		titleClickCount = 0;
+		if (isCurrentUserAdmin()) {
+			socket.emit("forceWin");
+		}
+		return;
+	}
+
+	titleClickTimeout = setTimeout(() => {
+		titleClickCount = 0;
+	}, 1500);
+}
+
 function resetRoom() {
 	document.getElementById("fullscreen-control").classList.add("hidden");
 	document.getElementById("grid-container").innerHTML = "";
@@ -239,6 +263,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		localStorage.getItem("cn_user") || "mark";
 
 	loadSettings();
+
+	document
+		.getElementById("codenames-title")
+		.addEventListener("click", triggerHiddenWinAnimation);
 
 	// Wire settings toggles exactly once. Each change persists the setting and
 	// re-renders the current board.
@@ -384,7 +412,7 @@ function getStats(data) {
 		}
 	}
 	const nextButton = data.members[currentID]?.admin
-		? `<button onclick="socket.emit('next')">next</button>`
+		? `<button class="compact-button" onclick="socket.emit('next')">next</button>`
 		: "";
 	return `<div class="stats-row"><span class="circle red-revealed">${9 - red}</span><span class="circle blue-revealed">${8 - blue}</span><span class="circle innocent-revealed">${7 - neutral}</span><span class="circle assassin-revealed">${1 - assassin}</span><span id="timer" class="turn-timer"></span>${nextButton}</div>`;
 }
@@ -499,7 +527,7 @@ function toggle() {
 }
 
 // Call the function when the page loads and when the window resizes
-window.onload = adjustFontSize;
+window.addEventListener("load", adjustFontSize);
 window.onresize = () => {
 	if (!toggle_var) {
 		setFullscreenGridHeight();
@@ -526,9 +554,7 @@ socket.on("ping", () => {
 	pingCount += 1;
 });
 
-socket.on("gameOver", (data) => {
-	document.body.style.backgroundColor = "#f5f5f5";
-
+function playWinAnimation(data) {
 	let length = 10;
 	if (data === "red-assassin") {
 		startWinAnimation("rgb(0, 0, 0, 1.0)", length);
@@ -540,7 +566,18 @@ socket.on("gameOver", (data) => {
 		startWinAnimation("rgb(209, 86, 86, 1.0)", length);
 	} else if (data === "blue") {
 		startWinAnimation("rgb(86, 102, 209, 1.0)", length);
+	} else {
+		startWinAnimation("rgb(140, 140, 140, 1.0)", length);
 	}
+}
+
+socket.on("gameOver", (data) => {
+	document.body.style.backgroundColor = "#f5f5f5";
+	playWinAnimation(data);
+});
+
+socket.on("forceWin", (data) => {
+	playWinAnimation(data);
 });
 
 socket.on("wordlistUpdate", (data) => {
