@@ -225,7 +225,7 @@ const Room = class {
 		this.id = id;
 		this.members = {};
 		this.assassinEnabled = true;
-		this.timerEnabled = true;
+		this.timerEnabled = false;
 		this.game = new Game("original", this.assassinEnabled);
 	}
 

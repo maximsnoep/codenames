@@ -536,6 +536,8 @@ canvas {
 	font-size: 0.85em;
 	color: #242424;
 	user-select: none;
+tline-height: 1;
+vertical-align: middle;
 }
 
 /* Name is clickable for admins to promote/demote spymasters. */
@@ -551,6 +553,7 @@ canvas {
 .member-you {
 	color: #888;
 	font-size: 0.85em;
+tline-height: 1;
 }
 
 /* Name-taken warning shown below the login inputs. */

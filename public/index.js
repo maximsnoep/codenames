@@ -9,7 +9,7 @@ let lastData = null;
 let currentTurnStart = null;
 
 // Room-shared setting controlled by admins.
-let currentTimerEnabled = true;
+let currentTimerEnabled = false;
 
 let titleClickCount = 0;
 let titleClickTimeout = null;
@@ -19,9 +19,8 @@ let titleClickTimeout = null;
 function loadSettings() {
 	const colors = localStorage.getItem("cn_colors") === "true";
 	const sorted = localStorage.getItem("cn_sorted") === "true";
-	const assassin = true;
-	const timerRaw = localStorage.getItem("cn_timer");
-	const timer = timerRaw === null ? true : timerRaw === "true";
+	const assassin = localStorage.getItem("cn_assassin") !== "false";
+	const timer = localStorage.getItem("cn_timer") === "true";
 	const combine = localStorage.getItem("cn_combine_wordlists") === "true";
 
 	const colorsInput = document.getElementById("colors");
@@ -60,6 +59,10 @@ function saveSettings() {
 	localStorage.setItem(
 		"cn_timer",
 		document.getElementById("timer-toggle").checked,
+	);
+	localStorage.setItem(
+		"cn_assassin",
+		document.getElementById("assassin-toggle").checked,
 	);
 	localStorage.setItem(
 		"cn_combine_wordlists",
@@ -198,6 +201,13 @@ function joinRoom() {
 	}
 	localStorage.setItem("cn_room", room);
 	localStorage.setItem("cn_user", user);
+localStorage.removeItem("cn_colors");
+	localStorage.removeItem("cn_sorted");
+	localStorage.removeItem("cn_assassin");
+	localStorage.removeItem("cn_timer");
+	localStorage.removeItem("cn_combine_wordlists");
+	localStorage.removeItem("cn_selected_wordlists");
+	loadSettings();
 	socket.emit("joinRoom", { room_id: room, user_name: user });
 }
 function exitRoom() {
@@ -259,13 +269,13 @@ function resetRoom() {
 			o.classList.add("hidden");
 		},
 	);
-const panel = document.getElementById("settings-panel");
-	if (panel) panel.classList.add("hidden");
+	const panel = document.getElementById("settings-panel");
+	if (panel) panel.style.display = "none";
 	const loginArea = document.getElementById("login-area");
 	if (loginArea) loginArea.classList.remove("hidden");
 	const roomBar = document.getElementById("room-bar");
 	if (roomBar) roomBar.classList.add("hidden");
-const grid = document.getElementById("grid-container");
+	const grid = document.getElementById("grid-container");
 	if (grid) grid.classList.add("hidden");
 	const stats = document.getElementById("stats-lower");
 	if (stats) stats.style.display = "none";
@@ -620,10 +630,10 @@ function toggle() {
 			},
 		);
 		document.querySelector(".info-trigger")?.classList.add("hidden");
-	const roomBar = document.getElementById("room-bar");
+		const roomBar = document.getElementById("room-bar");
 		if (roomBar) roomBar.classList.add("hidden");
 		const settingsPanel = document.getElementById("settings-panel");
-		if (settingsPanel) settingsPanel.classList.add("hidden");
+		if (settingsPanel) settingsPanel.style.display = "none";
 		closeTooltip();
 		setFullscreenGridHeight();
 		toggle_var = false;
@@ -634,10 +644,11 @@ function toggle() {
 				o.style.display = o.style.old_display;
 				Array.from(o.querySelectorAll("*")).forEach((c) => {
 					c.style.display = c.style.old_display;
-	const roomBar = document.getElementById("room-bar");
-		if (roomBar && lastData) roomBar.classList.remove("hidden");
-		const panel = document.getElementById("settings-panel");
-		if (panel && lastData?.members?.[currentID]?.admin) panel.classList.remove("hidden");
+					const roomBar = document.getElementById("room-bar");
+					if (roomBar && lastData) roomBar.classList.remove("hidden");
+					const panel = document.getElementById("settings-panel");
+					if (panel && lastData?.members?.[currentID]?.admin)
+						panel.style.display = "";
 				});
 			},
 		);
@@ -791,31 +802,31 @@ socket.on("wordlistUpdate", (data) => {
 });
 
 socket.on("roomUpdate", (data) => {
-		lastData = data;
+	lastData = data;
 
-		const loginArea = document.getElementById("login-area");
-		if (loginArea) loginArea.classList.add("hidden");
-		const roomBar = document.getElementById("room-bar");
-		if (roomBar) roomBar.classList.remove("hidden");
+	const loginArea = document.getElementById("login-area");
+	if (loginArea) loginArea.classList.add("hidden");
+	const roomBar = document.getElementById("room-bar");
+	if (roomBar) roomBar.classList.remove("hidden");
 	const grid = document.getElementById("grid-container");
-		if (grid) grid.classList.remove("hidden");
-		const stats = document.getElementById("stats-lower");
-		if (stats) stats.style.display = "";
+	if (grid) grid.classList.remove("hidden");
+	const stats = document.getElementById("stats-lower");
+	if (stats) stats.style.display = "";
 	const panel = document.getElementById("settings-panel");
-		const isSpymaster = data.members[currentID]?.admin;
-		if (isSpymaster) {
-			if (panel) panel.classList.remove("hidden");
-		} else {
-			if (panel) panel.classList.add("hidden");
-		}
+	const isSpymaster = data.members[currentID]?.admin;
+if (isSpymaster) {
+		if (panel) panel.style.display = "";
+	} else {
+		if (panel) panel.style.display = "none";
+	}
 
-		document.getElementById("fullscreen-control").classList.remove("hidden");
-		currentTimerEnabled = data.timerEnabled !== false;
-		const assassinEnabled = data.assassinEnabled !== false;
-		document.getElementById("timer-toggle").checked = currentTimerEnabled;
-		document.getElementById("timer-readonly").checked = currentTimerEnabled;
-		document.getElementById("assassin-toggle").checked = assassinEnabled;
-		document.getElementById("assassin-readonly").checked = assassinEnabled;
+	document.getElementById("fullscreen-control").classList.remove("hidden");
+	currentTimerEnabled = data.timerEnabled !== false;
+	const assassinEnabled = data.assassinEnabled !== false;
+	document.getElementById("timer-toggle").checked = currentTimerEnabled;
+	document.getElementById("timer-readonly").checked = currentTimerEnabled;
+	document.getElementById("assassin-toggle").checked = assassinEnabled;
+	document.getElementById("assassin-readonly").checked = assassinEnabled;
 
 	// show grid
 	let sorted = document.getElementById("sorted").checked;
@@ -842,22 +853,26 @@ socket.on("roomUpdate", (data) => {
 		}
 	}
 
-	// show room info
-	let members = [];
+// show room info
 	const isAdmin = data.members[currentID]?.admin;
-	for (const [id, member] of Object.entries(data.members)) {
+	const memberEntries = Object.entries(data.members);
+	memberEntries.sort(([, a], [, b]) => {
+		if (a.admin && !b.admin) return -1;
+		if (!a.admin && b.admin) return 1;
+		return 0;
+	});
+	let memberSpans = [];
+	for (const [id, member] of memberEntries) {
 		const isYou = id == currentID;
 		const star = member.admin ? '<span class="member-star">★</span>' : "";
 		const you = isYou ? " <span class='member-you'>(you)</span>" : "";
-		const nameClass =
-			"member-name" + (isAdmin ? " member-name--clickable" : "");
-
-		members.push(
+		const nameClass = "member-name" + (isAdmin ? " member-name--clickable" : "");
+		memberSpans.push(
 			`<span class="member-item" data-member-id="${id}">${star}<span class="${nameClass}">${member.name}</span>${you}</span>`,
 		);
 	}
 	document.getElementById("room_info").innerHTML =
-		`<span class="room-id-label">${data.id}</span><br>${members.join(" ")}`;
+		`<span class="room-id-label">${data.id}</span><br>${memberSpans.join(", ")}`;
 
 	// Admins click a name to toggle spymaster status.
 	Array.from(
