@@ -17,43 +17,26 @@ let titleClickTimeout = null;
 // --- Persistent settings (localStorage) ------------------------------------
 
 function loadSettings() {
-	const colors = localStorage.getItem("cn_colors") === "true";
-	const sorted = localStorage.getItem("cn_sorted") === "true";
+	const spymasterView = localStorage.getItem("cn_spymaster_view") === "true";
 	const assassin = localStorage.getItem("cn_assassin") !== "false";
 	const timer = localStorage.getItem("cn_timer") === "true";
-	const combine = localStorage.getItem("cn_combine_wordlists") === "true";
 
-	const colorsInput = document.getElementById("colors");
-	const sortedInput = document.getElementById("sorted");
+	const spymasterViewInput = document.getElementById("spymaster-view");
 	const assassinInput = document.getElementById("assassin-toggle");
 	const timerInput = document.getElementById("timer-toggle");
-	const combineInput = document.getElementById("combine-wordlists");
-	if (
-		!colorsInput ||
-		!sortedInput ||
-		!assassinInput ||
-		!timerInput ||
-		!combineInput
-	)
-		return;
+	if (!spymasterViewInput || !assassinInput || !timerInput) return;
 
-	colorsInput.checked = colors;
-	sortedInput.checked = sorted;
+	spymasterViewInput.checked = spymasterView;
 	assassinInput.checked = assassin;
 	timerInput.checked = timer;
 	currentTimerEnabled = timer;
-	combineInput.checked = combine;
 	updateWordlistMenuMode();
 }
 
 function saveSettings() {
 	localStorage.setItem(
-		"cn_colors",
-		document.getElementById("colors").checked,
-	);
-	localStorage.setItem(
-		"cn_sorted",
-		document.getElementById("sorted").checked,
+		"cn_spymaster_view",
+		document.getElementById("spymaster-view").checked,
 	);
 
 	localStorage.setItem(
@@ -63,10 +46,6 @@ function saveSettings() {
 	localStorage.setItem(
 		"cn_assassin",
 		document.getElementById("assassin-toggle").checked,
-	);
-	localStorage.setItem(
-		"cn_combine_wordlists",
-		document.getElementById("combine-wordlists").checked,
 	);
 }
 
@@ -84,10 +63,6 @@ function loadSelectedWordlists() {
 	return ["original"];
 }
 
-function isCombiningWordlists() {
-	return document.getElementById("combine-wordlists").checked;
-}
-
 function getSelectedWordlists() {
 	return Array.from(
 		document.querySelectorAll("#wordlists input:checked"),
@@ -98,14 +73,9 @@ function updateWordlistMenuMode() {
 	const menu = document.getElementById("wordlists");
 	if (!menu) return;
 
-	const combining = isCombiningWordlists();
 	Array.from(menu.querySelectorAll("input")).forEach((input) => {
-		input.type = combining ? "checkbox" : "radio";
-		if (combining) {
-			input.removeAttribute("name");
-		} else {
-			input.name = "wordlist";
-		}
+		input.type = "checkbox";
+		input.removeAttribute("name");
 	});
 }
 
@@ -116,7 +86,7 @@ function updateWordlistDropdownLabel() {
 	const selected = getSelectedWordlists();
 	if (selected.length === 0) {
 		button.textContent = "select wordlist";
-	} else if (isCombiningWordlists() && selected.length > 1) {
+	} else if (selected.length > 1) {
 		button.textContent = `${selected.length} wordlists`;
 	} else {
 		button.textContent = selected[0];
@@ -139,22 +109,6 @@ function toggleWordlistDropdown() {
 	document.getElementById("wordlists").classList.toggle("hidden");
 }
 
-function enforceSingleWordlistSelection(preferredInput = null) {
-	const inputs = Array.from(document.querySelectorAll("#wordlists input"));
-	let selected = inputs.filter((input) => input.checked);
-	let keep =
-		preferredInput && preferredInput.checked ? preferredInput : selected[0];
-
-	if (!keep && inputs.length > 0) {
-		keep = inputs.find((input) => input.value === "original") || inputs[0];
-		keep.checked = true;
-	}
-
-	inputs.forEach((input) => {
-		input.checked = input === keep;
-	});
-}
-
 function resetGame() {
 	let wordlists = getSelectedWordlists();
 	if (wordlists.length === 0) {
@@ -165,9 +119,6 @@ function resetGame() {
 		return;
 	}
 	saveSelectedWordlists();
-	if (!isCombiningWordlists()) {
-		wordlists = wordlists[0];
-	}
 	socket.emit(
 		"reinitGame",
 		wordlists,
@@ -177,9 +128,8 @@ function resetGame() {
 
 function rerender() {
 	if (!lastData) return;
-	const admin = document.getElementById("colors").checked;
-	const sorted = document.getElementById("sorted").checked;
-	buildGrid(lastData, admin, sorted);
+	const spymasterView = document.getElementById("spymaster-view").checked;
+	buildGrid(lastData, spymasterView, spymasterView);
 	document.getElementById("stats-lower").innerHTML = getStats(lastData);
 	updateTimer();
 	adjustFontSize();
@@ -201,11 +151,10 @@ function joinRoom() {
 	}
 	localStorage.setItem("cn_room", room);
 	localStorage.setItem("cn_user", user);
-	localStorage.removeItem("cn_colors");
-	localStorage.removeItem("cn_sorted");
+	localStorage.removeItem("cn_spymaster_view");
 	localStorage.removeItem("cn_assassin");
 	localStorage.removeItem("cn_timer");
-	localStorage.removeItem("cn_combine_wordlists");
+
 	localStorage.removeItem("cn_selected_wordlists");
 	localStorage.removeItem("cn_wordlists");
 	loadSettings();
@@ -225,7 +174,62 @@ socket.on("return", (data) => {
 	currentID = data;
 	sessionStorage.setItem("codenames_user_id", currentID);
 	loadSettings();
+	socket.emit("getRooms");
 });
+
+socket.on("roomsList", (data) => {
+	const list = document.getElementById("rooms-list");
+	if (!list) return;
+
+	const loginArea = document.getElementById("login-area");
+	const onLoginScreen = loginArea && !loginArea.classList.contains("hidden");
+	const footer = document.getElementById("server-footer");
+	if (!onLoginScreen) {
+		if (footer) footer.innerHTML = "";
+		return;
+	}
+
+	const rooms = data?.rooms || [];
+	const serverStarted = data?.serverStarted;
+	const totalReveals = data?.totalReveals != null ? data.totalReveals : 0;
+
+	let html = '<div class="rooms-list-title">current rooms</div>';
+	if (rooms.length === 0) {
+		html += '<div class="rooms-list-empty">no active rooms</div>';
+	} else {
+		html += rooms
+			.map((r) => {
+				const score = r.over
+					? "&mdash;"
+					: `<span class="room-score-red">${9 - r.red}</span> &ndash; <span class="room-score-blue">${8 - r.blue}</span>`;
+				return `<button class="room-chip" onclick="joinRoomFromList('${r.id}')"><span class="room-chip-name">${r.id}</span><span class="room-chip-members">${r.members} player${r.members !== 1 ? "s" : ""}</span><span class="room-chip-score">${score}</span></button>`;
+			})
+			.join("");
+	}
+	list.innerHTML = html;
+
+	if (footer && serverStarted) {
+		const ago = Math.max(0, Date.now() - serverStarted);
+		const minutes = Math.floor(ago / 60000);
+		const hours = Math.floor(ago / 3600000);
+		const days = Math.floor(ago / 86400000);
+		let when;
+		if (minutes < 60) {
+			when = `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+		} else if (hours < 24) {
+			when = `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+		} else {
+			when = `${days} day${days !== 1 ? "s" : ""} ago`;
+		}
+		footer.innerHTML = `<div class="server-footer">${rooms.length} room${rooms.length !== 1 ? "s" : ""} active &middot; ${totalReveals} card${totalReveals !== 1 ? "s" : ""} flipped since last server restart (${when})</div>`;
+	}
+});
+
+function joinRoomFromList(room) {
+	document.getElementById("room_id").value = room;
+	joinRoom();
+}
+
 socket.on("nameTaken", (room_id) => {
 	const msg = document.getElementById("name-taken-msg");
 	if (msg) {
@@ -261,6 +265,9 @@ function resetRoom() {
 	document.getElementById("stats-lower").innerHTML = "";
 	document.body.style.backgroundColor = "#f5f5f5";
 	document.getElementById("room_info").innerHTML = "";
+	document.getElementById("server-footer").innerHTML = "";
+	document.getElementById("bottom-bar").style.display = "";
+	socket.emit("getRooms");
 	Array.from(document.getElementsByClassName("admin-controls")).forEach(
 		(o) => {
 			o.classList.add("hidden");
@@ -319,11 +326,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	});
 
-	["colors", "sorted"].forEach((id) => {
-		document.getElementById(id).addEventListener("change", () => {
-			saveSettings();
-			rerender();
-		});
+	document.getElementById("spymaster-view").addEventListener("change", () => {
+		saveSettings();
+		rerender();
 	});
 
 	document
@@ -342,23 +347,15 @@ document.addEventListener("DOMContentLoaded", function () {
 		socket.emit("setTimerEnabled", currentTimerEnabled);
 	});
 
-	document
-		.getElementById("combine-wordlists")
-		.addEventListener("change", () => {
-			updateWordlistMenuMode();
-			if (!isCombiningWordlists()) {
-				enforceSingleWordlistSelection();
-			}
-			saveSettings();
-			saveSelectedWordlists();
-		});
-
 	document.addEventListener("click", (event) => {
 		const dropdown = document.getElementById("wordlist-dropdown");
 		if (dropdown && !dropdown.contains(event.target)) {
 			closeWordlistDropdown();
 		}
 	});
+
+	// Refresh room list periodically (every 5 seconds)
+	setInterval(() => socket.emit("getRooms"), 5000);
 });
 
 function buildGrid(data, admin, sorted) {
@@ -644,6 +641,7 @@ function toggle() {
 		const settingsPanel = document.getElementById("settings-panel");
 		if (settingsPanel) settingsPanel.style.display = "none";
 		closeTooltip();
+		document.getElementById("server-footer").style.display = "none";
 		setFullscreenMode(true);
 		setFullscreenGridHeight();
 		toggle_var = false;
@@ -666,6 +664,7 @@ function toggle() {
 		);
 		document.querySelector(".info-trigger")?.classList.remove("hidden");
 		document.getElementById("grid-container").style.height = "70vmin";
+		document.getElementById("server-footer").style.display = "";
 		setFullscreenMode(false);
 		toggle_var = true;
 	}
@@ -767,25 +766,18 @@ socket.on("wordlistUpdate", (data) => {
 
 	const addWordlistOption = (list) => {
 		const label = document.createElement("label");
-		label.className = "wordlist-option";
+		label.className = "wordlist-option toggle-label";
 
 		const input = document.createElement("input");
-		input.type = isCombiningWordlists() ? "checkbox" : "radio";
-		if (!isCombiningWordlists()) {
-			input.name = "wordlist";
-		}
+		input.type = "checkbox";
 		input.value = list;
 		input.checked = selected.includes(list);
 		input.addEventListener("change", () => {
-			if (!isCombiningWordlists()) {
-				input.checked = true;
-				enforceSingleWordlistSelection(input);
-				closeWordlistDropdown();
-			}
 			saveSelectedWordlists();
 		});
 
 		const text = document.createElement("span");
+		text.className = "toggle-text";
 		text.textContent = list;
 
 		label.append(input, text);
@@ -807,9 +799,6 @@ socket.on("wordlistUpdate", (data) => {
 	});
 
 	updateWordlistMenuMode();
-	if (!isCombiningWordlists()) {
-		enforceSingleWordlistSelection();
-	}
 	saveSelectedWordlists();
 	adjustFontSize();
 });
@@ -819,6 +808,9 @@ socket.on("roomUpdate", (data) => {
 
 	const loginArea = document.getElementById("login-area");
 	if (loginArea) loginArea.classList.add("hidden");
+	const bottomBar = document.getElementById("bottom-bar");
+	if (bottomBar) bottomBar.style.display = "";
+	document.getElementById("server-footer").innerHTML = "";
 	const roomBar = document.getElementById("room-bar");
 	if (roomBar) roomBar.classList.remove("hidden");
 	const grid = document.getElementById("grid-container");
@@ -846,9 +838,8 @@ socket.on("roomUpdate", (data) => {
 	document.getElementById("assassin-readonly").checked = assassinEnabled;
 
 	// show grid
-	let sorted = document.getElementById("sorted").checked;
-	let admin = document.getElementById("colors").checked;
-	buildGrid(data, admin, sorted);
+	let spymasterView = document.getElementById("spymaster-view").checked;
+	buildGrid(data, spymasterView, spymasterView);
 	document.getElementById("stats-lower").innerHTML = getStats(data);
 
 	// The turn timer freezes once the game is over, otherwise it tracks the

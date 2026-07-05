@@ -19,9 +19,6 @@ const CHECK_INTERVAL = 5;
 const INACTIVE_TIMEOUT = 30 * 1000;
 
 setInterval(() => {
-	console.log(
-		`Currently active users: ${Object.keys(activeUsers).length}. Checking for inactive users.`,
-	);
 	Object.keys(activeUsers).forEach((userID) => {
 		const user = activeUsers[userID];
 		if (!user) return;
@@ -114,10 +111,6 @@ const Game = class {
 		this.over = false;
 		this.assassin = assassin;
 		this.turnStart = Date.now();
-
-		console.log(
-			`GAME: Initialized with\n  wordlists: ${this.wordLists.join(", ")}\n  codenames: ${this.codenames}\n  coloring: ${this.coloring}\n  assassin: ${this.assassin}\n`,
-		);
 	}
 
 	reveal(id) {
@@ -142,8 +135,6 @@ const Game = class {
 		}
 
 		this.revealed[id] = true;
-
-		console.log(`GAME: Revealed card ${id} (${this.codenames[id]}).`);
 	}
 
 	state() {
@@ -204,12 +195,8 @@ const Game = class {
 		if (this.state() == -1) {
 			return;
 		}
-		console.log(`state: ${this.state()}`);
-		console.log(`GAME: Next turn.`);
-		console.log(`GAME: Current turn is ${this.current}.`);
 		this.current = this.current == "red" ? "blue" : "red";
 		this.turnStart = Date.now();
-		console.log(`GAME: Next turn is ${this.current}.`);
 	}
 };
 
@@ -324,6 +311,8 @@ const RoomManager = class {
 
 const room_manager = new RoomManager();
 const activeUsers = {};
+const SERVER_START = Date.now();
+let totalReveals = 0;
 
 function broadcastRoomUpdate(room_id) {
 	if (!room_manager.is_room(room_id)) {
@@ -342,10 +331,20 @@ function broadcastRoomUpdate(room_id) {
 
 function removeInactiveUser(userID, reason) {
 	const roomIDs = room_manager.rooms_of_user(userID);
-	console.log(`User ${userID} removed due to inactivity (${reason}).`);
+	const name = getUserName(userID);
+	console.log(
+		`User ${name || userID} removed due to inactivity (${reason}).`,
+	);
 	room_manager.remove_user_from_all_rooms(userID);
 	delete activeUsers[userID];
 	roomIDs.forEach(broadcastRoomUpdate);
+}
+
+function getUserName(userID) {
+	for (const room of Object.values(room_manager.rooms)) {
+		if (room.members[userID]) return room.members[userID].name;
+	}
+	return null;
 }
 
 io.on("connection", (socket) => {
@@ -406,11 +405,15 @@ io.on("connection", (socket) => {
 				room_manager.rooms[room_id],
 			);
 		}
+		broadcastRoomsList();
 	}
 
 	function leave_room() {
 		for (const room_id of room_manager.rooms_of_user(currentID)) {
-			console.log(`${currentID} left <${room_id}>`);
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
+			console.log(`${name} (${currentID}) left <${room_id}>`);
 			room_manager.remove_user_from_room(currentID, room_id);
 			socket.leave(room_id);
 			update(room_id);
@@ -437,18 +440,18 @@ io.on("connection", (socket) => {
 		if (!room_id || !user_name) return;
 
 		if (!room_manager.is_room(room_id)) {
-			console.log(`${currentID} created <${room_id}>`);
+			console.log(`${user_name} (${currentID}) created <${room_id}>`);
 			room_manager.rooms[room_id] = new Room(room_id);
 			room_manager.add_user_to_room(currentID, user_name, room_id);
 			room_manager.rooms[room_id].add_admin(currentID);
 		} else if (room_manager.rooms[room_id].is_name_taken(user_name)) {
 			console.log(
-				`${currentID} tried to join <${room_id}> as "${user_name}" but name is taken.`,
+				`${user_name} (${currentID}) tried to join <${room_id}> but name is taken.`,
 			);
 			io.to(socket.id).emit("nameTaken", room_id);
 			return;
 		} else {
-			console.log(`${currentID} joined <${room_id}>`);
+			console.log(`${user_name} (${currentID}) joined <${room_id}>`);
 			room_manager.add_user_to_room(currentID, user_name, room_id);
 		}
 
@@ -459,13 +462,17 @@ io.on("connection", (socket) => {
 		leave_room();
 	});
 
-	socket.on("toggleAdmin", (user_id) => {
+	socket.on("toggleAdmin", (target_id) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
-			room_manager.rooms[room_id].members[user_id].admin =
-				!room_manager.rooms[room_id].members[user_id].admin;
-			if (room_manager.rooms[room_id].num_admins() == 0) {
-				room_manager.rooms[room_id].add_admin(user_id);
+			const room = room_manager.rooms[room_id];
+			room.members[target_id].admin = !room.members[target_id].admin;
+			if (room.num_admins() == 0) {
+				room.add_admin(target_id);
 			}
+			const actorName = room.members[currentID]?.name || currentID;
+			const targetName = room.members[target_id]?.name || target_id;
+			const role = room.members[target_id].admin ? "promoted" : "demoted";
+			console.log(`${actorName} @ <${room_id}> ${role} ${targetName}.`);
 			update(room_id);
 		}
 	});
@@ -473,8 +480,11 @@ io.on("connection", (socket) => {
 	socket.on("setTimerEnabled", (enabled) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
 			room_manager.rooms[room_id].timerEnabled = Boolean(enabled);
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
 			console.log(
-				`<${currentID} @ ${room_id}> set timer to ${room_manager.rooms[room_id].timerEnabled}.`,
+				`${name} @ <${room_id}> set timer to ${room_manager.rooms[room_id].timerEnabled}.`,
 			);
 			update(room_id);
 		}
@@ -485,8 +495,11 @@ io.on("connection", (socket) => {
 			const assassinEnabled = Boolean(enabled);
 			room_manager.rooms[room_id].assassinEnabled = assassinEnabled;
 			room_manager.rooms[room_id].game.assassin = assassinEnabled;
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
 			console.log(
-				`<${currentID} @ ${room_id}> set assassin to ${assassinEnabled}.`,
+				`${name} @ <${room_id}> set assassin to ${assassinEnabled}.`,
 			);
 			update(room_id);
 		}
@@ -494,10 +507,17 @@ io.on("connection", (socket) => {
 
 	socket.on("revealCards", (cards) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
-			console.log(`<${currentID} @ ${room_id}> revealed card ${cards}.`);
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
+			const cardNames = cards
+				.map((c) => room_manager.rooms[room_id].game.codenames[c])
+				.join(", ");
+			console.log(`${name} @ <${room_id}> revealed cards: ${cardNames}.`);
 
 			for (const card of cards) {
 				room_manager.rooms[room_id].game.reveal(card);
+				totalReveals++;
 			}
 
 			update(room_id);
@@ -512,7 +532,7 @@ io.on("connection", (socket) => {
 					room_manager.rooms[room_id].game.current,
 				);
 				console.log(
-					`<${currentID} @ ${room_id}> game over (${room_manager.rooms[room_id].game.current}).`,
+					`${name} @ <${room_id}> game over (${room_manager.rooms[room_id].game.current}).`,
 				);
 			}
 		}
@@ -521,8 +541,11 @@ io.on("connection", (socket) => {
 	socket.on("reinitGame", (wordLists, assassin) => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
 			const selected = getSelectedWordlists(wordLists);
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
 			console.log(
-				`<${currentID} @ ${room_id}> reinits game with ${selected.join(", ")}.`,
+				`${name} @ <${room_id}> reinits game with ${selected.join(", ")}.`,
 			);
 			room_manager.rooms[room_id].assassinEnabled = Boolean(assassin);
 			room_manager.rooms[room_id].game = new Game(
@@ -535,7 +558,10 @@ io.on("connection", (socket) => {
 
 	socket.on("next", () => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
-			console.log(`<${currentID} @ ${room_id}> goes next.`);
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
+			console.log(`${name} @ <${room_id}> goes next.`);
 			room_manager.rooms[room_id].game.next();
 			update(room_id);
 		}
@@ -544,8 +570,52 @@ io.on("connection", (socket) => {
 	socket.on("forceWin", () => {
 		for (const room_id of room_manager.rooms_of_admin(currentID)) {
 			const current = room_manager.rooms[room_id].game.current;
-			console.log(`<${currentID} @ ${room_id}> forced win animation.`);
+			const name =
+				room_manager.rooms[room_id].members[currentID]?.name ||
+				currentID;
+			console.log(`${name} @ <${room_id}> forced win animation.`);
 			io.to(room_id).emit("forceWin", current);
 		}
 	});
+
+	socket.on("getRooms", () => {
+		sendRoomsList(socket);
+	});
 });
+
+function sendRoomsList(socket) {
+	io.to(socket.id).emit("roomsList", buildRoomsPayload());
+}
+
+function broadcastRoomsList() {
+	const payload = buildRoomsPayload();
+	for (const id of Object.keys(activeUsers)) {
+		io.to(activeUsers[id].socketID).emit("roomsList", payload);
+	}
+}
+
+function buildRoomsPayload() {
+	const rooms = Object.values(room_manager.rooms).map((room) => {
+		const game = room.game;
+		let redRevealed = 0;
+		let blueRevealed = 0;
+		for (let i = 0; i < game.revealed.length; i++) {
+			if (!game.revealed[i]) continue;
+			const idx = game.coloring.indexOf(i);
+			if (idx >= 1 && idx <= 9) redRevealed++;
+			if (idx >= 10 && idx <= 17) blueRevealed++;
+		}
+		return {
+			id: room.id,
+			members: room.num_members(),
+			red: redRevealed,
+			blue: blueRevealed,
+			over: game.over,
+		};
+	});
+	return {
+		rooms,
+		serverStarted: SERVER_START,
+		totalReveals,
+	};
+}

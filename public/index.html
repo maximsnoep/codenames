@@ -24,11 +24,25 @@
 				<strong id="codenames-title">codenames</strong>
 				<span
 					class="info-trigger"
-					style="cursor: pointer; z-index: 100"
+					style="
+						cursor: pointer;
+						z-index: 100;
+						display: inline-flex;
+						align-items: center;
+						justify-content: center;
+						width: 13px;
+						height: 13px;
+						border-radius: 50%;
+						border: 1.2px solid #242424;
+						font-size: 9px;
+						font-weight: 700;
+						color: #242424;
+						line-height: 1;
+					"
 					onclick="toggleTooltip(this)"
 					onmouseover="showTooltip(this)"
 					onmouseout="delayedHideTooltip()"
-					>&#9432;</span
+					>i</span
 				>
 				<div
 					class="tooltip-content"
@@ -43,7 +57,6 @@
 						padding: 1rem;
 						border: 1px solid #ccc;
 						border-radius: 0.5rem;
-						font-size: 0.9rem;
 						max-width: 28rem;
 					"
 					onmouseover="cancelHideTooltip()"
@@ -53,11 +66,11 @@
 					<ul>
 						<li>
 							Find all your team's words:
-							<span style="color: #d15656; font-weight: bold"
+							<span style="color: #d15656; font-weight: 600"
 								>Red</span
 							>
 							has 9,
-							<span style="color: #5666d1; font-weight: bold"
+							<span style="color: #5666d1; font-weight: 600"
 								>Blue</span
 							>
 							has 8.
@@ -69,7 +82,7 @@
 						<li>Wrong guesses end the turn.</li>
 						<li>
 							Guessing the
-							<span style="color: #242424; font-weight: bold"
+							<span style="color: #242424; font-weight: 600"
 								>Assassin</span
 							>
 							loses the game.
@@ -87,16 +100,12 @@
 				</div>
 			</div>
 			<div id="room-bar" class="hidden app-room-bar">
-				<button
-					class="compact-button"
-					id="exit-btn"
-					onclick="exitRoom()"
-				>
+				<button class="compact-button" onclick="exitRoom()">
 					exit
 				</button>
 			</div>
 			<div id="fullscreen-control" class="hidden app-fullscreen">
-				<button class="fullscreen-button" onclick="toggle()">
+				<button class="compact-button" onclick="toggle()">
 					&#x26F6;
 				</button>
 			</div>
@@ -137,7 +146,6 @@
 				<div id="settings-panel" style="display: none">
 					<div class="hidden admin-controls admin-control-columns">
 						<div class="admin-control-column">
-							<strong>Wordlist</strong>
 							<div class="wordlist-picker">
 								<div
 									class="wordlist-dropdown"
@@ -156,74 +164,56 @@
 									></div>
 								</div>
 							</div>
-							<label
-								><input
-									type="checkbox"
-									id="combine-wordlists"
-								/>
-								combination</label
-							>
 							<button
 								class="compact-button"
 								onclick="resetGame()"
 							>
-								reset
+								re-initialize
 							</button>
 						</div>
 						<div class="admin-control-column">
-							<strong>Rules</strong>
-							<label
-								><input
+							<label class="toggle-label">
+								<input
 									type="checkbox"
 									id="assassin-toggle"
 									value="assassin-toggle"
 								/>
-								assassin</label
-							>
-							<label
-								><input type="checkbox" id="timer-toggle" />
-								timer</label
-							>
+								<span class="toggle-text">assassin</span>
+							</label>
+							<label class="toggle-label">
+								<input type="checkbox" id="timer-toggle" />
+								<span class="toggle-text">timer</span>
+							</label>
 						</div>
 						<div class="admin-control-column">
-							<strong>Local view</strong>
-							<label
-								><input
+							<label class="toggle-label">
+								<input
 									type="checkbox"
-									id="colors"
-									value="colors"
+									id="spymaster-view"
+									value="spymaster-view"
 								/>
-								colored</label
-							>
-							<label
-								><input
-									type="checkbox"
-									id="sorted"
-									value="sorted"
-								/>
-								sorted</label
-							>
+								<span class="toggle-text">spymaster view</span>
+							</label>
 						</div>
 					</div>
 					<div class="hidden rules-readonly admin-control-columns">
 						<div class="admin-control-column">
-							<strong>Rules</strong>
-							<label
-								><input
+							<label class="toggle-label">
+								<input
 									type="checkbox"
 									id="assassin-readonly"
 									disabled
 								/>
-								assassin</label
-							>
-							<label
-								><input
+								<span class="toggle-text">assassin</span>
+							</label>
+							<label class="toggle-label">
+								<input
 									type="checkbox"
 									id="timer-readonly"
 									disabled
 								/>
-								timer</label
-							>
+								<span class="toggle-text">timer</span>
+							</label>
 						</div>
 					</div>
 				</div>
@@ -238,58 +228,42 @@
 				"
 			>
 				<div id="login-area">
-					<div
-						class="login-controls"
-						style="
-							display: flex;
-							flex-wrap: wrap;
-							justify-content: center;
-							align-items: center;
-						"
+					<div class="login-player">
+						<label for="user_name" style="font-weight: 600"
+							>name</label
+						>
+						<input
+							type="text"
+							id="user_name"
+							size="8"
+							maxlength="8"
+							value=""
+							autocomplete="off"
+							autocorrect="off"
+							autocapitalize="off"
+							spellcheck="false"
+							onkeydown="return /[a-z]/i.test(event.key);"
+						/>
+					</div>
+					<span id="name-taken-msg" class="name-taken-msg hidden"
+						>name taken</span
 					>
-						<div style="padding: 0 0.5rem">
-							<label for="user_name" style="font-weight: 600"
-								>player</label
-							>
-							<input
-								type="text"
-								id="user_name"
-								size="8"
-								maxlength="8"
-								value=""
-								autocomplete="off"
-								autocorrect="off"
-								autocapitalize="off"
-								spellcheck="false"
-								onkeydown="return /[a-z]/i.test(event.key);"
-							/>
-							<span
-								id="name-taken-msg"
-								class="name-taken-msg hidden"
-								>name taken</span
-							>
-						</div>
-						<div style="padding: 0 0.5rem">
-							<label for="room_id" style="font-weight: 600"
-								>room</label
-							>
-							<input
-								type="text"
-								id="room_id"
-								size="8"
-								maxlength="8"
-								value=""
-								autocomplete="off"
-								autocorrect="off"
-								autocapitalize="off"
-								spellcheck="false"
-							/>
-						</div>
-						<div style="padding: 0 0.5rem">
-							<button class="compact-button" onclick="joinRoom()">
-								enter
-							</button>
-						</div>
+					<div id="rooms-list"></div>
+					<div class="login-new-room">
+						<input
+							type="text"
+							id="room_id"
+							size="8"
+							maxlength="8"
+							value=""
+							autocomplete="off"
+							autocorrect="off"
+							autocapitalize="off"
+							spellcheck="false"
+						/>
+						<button class="compact-button" onclick="joinRoom()">
+							create
+						</button>
 					</div>
 				</div>
 				<div
@@ -314,6 +288,22 @@
 				style="align-self: center; justify-self: center"
 			>
 				<span id="room_info" style="padding: 0.4rem 0"></span>
+			</div>
+
+			<!-- bottom row: footer + exit -->
+			<div
+				id="bottom-bar"
+				style="
+					align-self: end;
+					justify-self: center;
+					position: relative;
+					display: flex;
+					justify-content: center;
+					width: 100%;
+					padding: 0 1rem 1rem;
+				"
+			>
+				<div id="server-footer"></div>
 			</div>
 		</div>
 	</body>

@@ -10,6 +10,11 @@ body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+		sans-serif;
+	font-size: 16px;
+	line-height: 1.35;
 }
 
 html.fullscreen-mode,
@@ -96,66 +101,87 @@ div.grid-item[highlighted] {
 
 input[type="text"] {
 	box-sizing: border-box;
-	padding: 0.08rem 0.5rem;
-	border: 1px solid #aaa;
-	border-radius: 0.35rem;
-	background-color: #ffffff;
+	padding: 0.25rem 0;
+	border: none;
+	border-bottom: 1.5px solid #ccc;
+	border-radius: 0;
+	background-color: transparent;
 	color: #242424;
 	font: inherit;
-	line-height: 1.25;
+	outline: none;
 	text-transform: lowercase;
+}
+
+input[type="text"]:focus {
+	border-bottom-color: #242424;
+}
+
+label {
+	font: inherit;
+	font-weight: inherit;
 }
 
 input[type="checkbox"],
 input[type="radio"] {
-	position: relative;
-	top: 0.08em;
-	box-sizing: border-box;
-	width: 1em;
-	height: 1em;
-	border: 1px solid #aaa;
-	background-color: #ffffff;
-	appearance: none;
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
 }
 
-input[type="checkbox"] {
-	border-radius: 0.18em;
+.toggle-label {
+	cursor: pointer;
+	user-select: none;
 }
 
-input[type="radio"] {
-	border-radius: 50%;
+.toggle-text {
+	color: #aaa;
 }
 
-input[type="checkbox"]:checked,
-input[type="radio"]:checked {
-	background-color: #555555;
-	box-shadow: inset 0 0 0 2px #ffffff;
+input[type="checkbox"]:not(:checked) + .toggle-text,
+input[type="radio"]:not(:checked) + .toggle-text {
+	text-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
-input[type="checkbox"]:disabled,
-input[type="radio"]:disabled {
-	opacity: 0.6;
+input[type="checkbox"]:checked + .toggle-text,
+input[type="radio"]:checked + .toggle-text {
+	color: #242424 !important;
+}
+
+.wordlist-option .toggle-text {
+	color: inherit;
+	font-weight: 400;
+	text-shadow: none;
+}
+
+.wordlist-option input:checked + .toggle-text {
+	color: inherit !important;
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+
+input[type="checkbox"]:disabled + .toggle-text {
+	color: #bbb;
+	cursor: default;
 }
 
 button {
 	display: inline-flex;
 	align-items: center;
-	padding: 0.1rem 0.5rem;
-	border: 1px solid #aaa;
-	border-radius: 0.35rem;
-	background-color: #ffffff;
+	gap: 0.3rem;
+	padding: 0.3rem 0.75rem;
+	border: none;
+	border-radius: 0.25rem;
+	background-color: #e8e8e8;
 	color: #242424;
 	font: inherit;
-	line-height: 1.2;
+	font-weight: 600;
+	text-transform: lowercase;
+	letter-spacing: 0.02em;
 	cursor: pointer;
 }
 
-button:hover {
-	background-color: #eeeeee;
-}
-
-button:active {
-	background-color: #dddddd;
+button::before {
+	content: none;
 }
 
 .app-shell {
@@ -169,9 +195,9 @@ button:active {
 }
 
 .app-header {
-	display: flex;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
 	align-items: flex-start;
-	justify-content: space-between;
 	padding: 0.5rem 1rem 0;
 }
 
@@ -181,35 +207,16 @@ button:active {
 	text-align: left;
 }
 
-.app-fullscreen {
-	margin-left: 1rem;
-}
 .app-room-bar {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
+	justify-self: center;
 }
 
-.fullscreen-button {
-	width: 1.25rem;
-	height: 1.25rem;
-	padding: 0;
-	border: 0;
-	border-radius: 0;
-	background: transparent;
-	font-size: 1rem;
-	line-height: 1;
-	cursor: pointer;
-	appearance: none;
-}
-
-.fullscreen-button:hover,
-.fullscreen-button:active {
-	background: transparent;
+.app-fullscreen {
+	justify-self: end;
 }
 
 .app-header.fullscreen-active {
-	justify-content: flex-end;
+	justify-items: end;
 }
 
 .tooltip-content {
@@ -231,15 +238,15 @@ button:active {
 	display: inline-flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: 0.4rem;
-	margin-bottom: 0.5rem;
+	gap: 1rem;
+	margin-bottom: 1rem;
 	text-align: left;
 }
 
 .admin-control-column {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: 1rem;
 }
 
 .admin-control-column label,
@@ -247,11 +254,6 @@ button:active {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.2rem;
-}
-
-.admin-control-column strong {
-	min-width: 4.5rem;
-	text-align: right;
 }
 
 .stats-row {
@@ -381,14 +383,25 @@ button:active {
 
 #wordlist-dropdown-button {
 	min-width: 8rem;
-	padding: 0.08rem 0.5rem;
-	line-height: 1.25;
+	padding: 0.25rem 0;
+	border: none;
+	border-bottom: 1.5px solid #ccc;
+	border-radius: 0;
+	background-color: transparent;
+	color: #242424;
+	font-weight: 400;
 	text-align: left;
 }
 
+#wordlist-dropdown-button:hover {
+	background-color: transparent;
+}
+
 .compact-button {
-	padding: 0.05rem 0.5rem 0.15rem;
-	line-height: 1.1;
+	padding: 0.15rem 0.5rem;
+	background-color: transparent;
+	color: #242424;
+	font-weight: 400;
 }
 
 .wordlist-menu {
@@ -411,9 +424,9 @@ button:active {
 
 .wordlist-group-title {
 	margin-top: 0.25rem;
-	font-size: 0.8em;
-	font-weight: bold;
-	color: #555555;
+	font-size: inherit;
+	font-weight: 600;
+	color: #242424;
 }
 
 .wordlist-group-title:first-child {
@@ -451,18 +464,13 @@ button:active {
 	.admin-control-columns {
 		width: calc(100vw - 2rem);
 		max-width: 24rem;
-		gap: 0.3rem;
+		gap: 0;
 	}
 
 	.admin-control-column {
 		width: 100%;
 		flex-wrap: wrap;
-		gap: 0.35rem 0.5rem;
-	}
-
-	.admin-control-column strong {
-		flex: 1 1 100%;
-		min-width: 4rem;
+		gap: 0;
 	}
 
 	#wordlist-dropdown-button {
@@ -508,11 +516,6 @@ button:active {
 		gap: 0.25rem;
 	}
 
-	.admin-control-column strong {
-		min-width: 0;
-		text-align: left;
-	}
-
 	.wordlist-picker,
 	.wordlist-dropdown,
 	#wordlist-dropdown-button {
@@ -543,13 +546,11 @@ canvas {
 #room_info {
 	display: block;
 	font-size: 0.85em;
-	line-height: 1.35;
 }
 
 .room-id-label {
 	display: block;
 	font-weight: 600;
-	line-height: 1.35;
 }
 
 .member-list {
@@ -558,14 +559,12 @@ canvas {
 	justify-content: center;
 	align-items: baseline;
 	gap: 0 0.6em;
-	line-height: 1.35;
 }
 
 .member-item {
 	display: inline-flex;
 	align-items: baseline;
 	gap: 0.15em;
-	line-height: 1.35;
 	white-space: nowrap;
 }
 
@@ -578,12 +577,10 @@ canvas {
 .member-name,
 .member-you {
 	display: inline-block;
-	line-height: 1.35;
 }
 
 .member-star {
 	color: #242424;
-	font-size: 0.9em;
 	user-select: none;
 }
 
@@ -597,7 +594,6 @@ canvas {
 
 .member-you {
 	color: #888;
-	font-size: 0.85em;
 }
 
 .name-taken-msg {
@@ -613,10 +609,105 @@ canvas {
 }
 
 #settings-panel .admin-control-columns {
-	gap: 0.2rem;
+	gap: 0.25rem;
 	margin-bottom: 0;
 }
 
 #settings-panel .admin-control-column {
-	gap: 0.3rem;
+	gap: 1rem;
+}
+
+#settings-panel button,
+#settings-panel label,
+#settings-panel .toggle-text {
+	font-size: inherit;
+	line-height: inherit;
+}
+
+@media (max-width: 600px) {
+	#settings-panel .admin-control-columns {
+		gap: 0.35rem;
+	}
+
+	#settings-panel .admin-control-column {
+		gap: 0;
+	}
+
+	#settings-panel .admin-control-column label,
+	#settings-panel .wordlist-picker,
+	#settings-panel .compact-button {
+		margin-right: 0.5rem;
+	}
+}
+
+/* --- Login area ---------------------------------------------------------- */
+
+#login-area {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	text-align: center;
+	padding: 0 1rem;
+}
+
+.login-player,
+.login-new-room {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.rooms-list-title {
+	font-weight: 600;
+	margin-bottom: 0.75rem;
+}
+
+.room-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.25rem 0.6rem;
+	margin: 0.15rem;
+	border: 1px solid #ccc;
+	border-radius: 0.35rem;
+	background-color: #fff;
+	font: inherit;
+	cursor: pointer;
+}
+
+.room-chip:hover {
+	background-color: #eee;
+}
+
+.room-chip-name {
+	font-weight: 600;
+}
+
+.room-chip-members {
+	color: #888;
+}
+
+.room-chip-score {
+	font-variant-numeric: tabular-nums;
+}
+
+.room-score-red {
+	color: #d15656;
+	font-weight: 600;
+}
+
+.room-score-blue {
+	color: #5666d1;
+	font-weight: 600;
+}
+
+.rooms-list-empty {
+	margin-bottom: 0.5rem;
+}
+
+.server-footer {
+	font-size: 0.75em;
+	color: #888;
+	text-align: center;
 }
