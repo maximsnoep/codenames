@@ -430,10 +430,10 @@ button:active {
 
 @media (max-width: 600px) {
 	.app-shell {
-		min-height: 90vh;
-		max-height: 90vh;
-		min-height: 90svh;
-		max-height: 90svh;
+		min-height: 80vh;
+		max-height: 80vh;
+		min-height: 80svh;
+		max-height: 80svh;
 	}
 
 	.app-header {
