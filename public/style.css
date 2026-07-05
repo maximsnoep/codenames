@@ -516,31 +516,50 @@ canvas {
 
 /* --- Lobby member list --------------------------------------------------- */
 
+#room_info {
+	font-size: 0.85em;
+	line-height: 1.25;
+}
+
+.room-id-label {
+	display: block;
+	font-weight: 600;
+	line-height: 1.25;
+}
+
+.member-list {
+	display: inline-flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 0 0.35em;
+	line-height: 1.25;
+}
+
 .member-item {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.15em;
+	height: 1.25em;
+	line-height: 1.25;
 	white-space: nowrap;
 }
 
-.room-id-label {
-	font-weight: 600;
+.member-star,
+.member-name,
+.member-you {
+	display: inline-flex;
+	align-items: center;
+	height: 1.25em;
+	line-height: 1.25;
 }
 
-#room_info {
-	font-size: 0.85em;
-}
-
-/* Spymaster star — only shown next to spymasters. */
 .member-star {
-	font-size: 0.85em;
 	color: #242424;
+	font-size: 0.85em;
 	user-select: none;
-tline-height: 1;
-vertical-align: middle;
 }
 
-/* Name is clickable for admins to promote/demote spymasters. */
 .member-name--clickable {
 	cursor: pointer;
 }
@@ -549,14 +568,11 @@ vertical-align: middle;
 	text-decoration: underline;
 }
 
-/* Current user's "(you)" label. */
 .member-you {
 	color: #888;
 	font-size: 0.85em;
-tline-height: 1;
 }
 
-/* Name-taken warning shown below the login inputs. */
 .name-taken-msg {
 	color: #d15656;
 	font-size: 0.85em;
@@ -576,4 +592,18 @@ tline-height: 1;
 
 #settings-panel .admin-control-column {
 	gap: 0.3rem;
+}
+
+.member-list {
+	display: inline-flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 0.15em;
+}
+
+.member-item > * {
+	display: inline-flex;
+	align-items: center;
+	line-height: 1.2;
 }
