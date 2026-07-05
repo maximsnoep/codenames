@@ -201,13 +201,13 @@ function joinRoom() {
 	}
 	localStorage.setItem("cn_room", room);
 	localStorage.setItem("cn_user", user);
-localStorage.removeItem("cn_colors");
+	localStorage.removeItem("cn_colors");
 	localStorage.removeItem("cn_sorted");
 	localStorage.removeItem("cn_assassin");
 	localStorage.removeItem("cn_timer");
 	localStorage.removeItem("cn_combine_wordlists");
 	localStorage.removeItem("cn_selected_wordlists");
-localStorage.removeItem("cn_wordlists");
+	localStorage.removeItem("cn_wordlists");
 	loadSettings();
 	socket.emit("joinRoom", { room_id: room, user_name: user });
 }
@@ -255,6 +255,7 @@ function triggerHiddenWinAnimation() {
 }
 
 function resetRoom() {
+	setFullscreenMode(false);
 	document.getElementById("fullscreen-control").classList.add("hidden");
 	document.getElementById("grid-container").innerHTML = "";
 	document.getElementById("stats-lower").innerHTML = "";
@@ -271,7 +272,9 @@ function resetRoom() {
 		},
 	);
 	const panel = document.getElementById("settings-panel");
-	if (panel) panel.style.display = "none"; const row = document.getElementById("settings-row"); if (row) row.style.display = "none";
+	if (panel) panel.style.display = "none";
+	const row = document.getElementById("settings-row");
+	if (row) row.style.display = "none";
 	const loginArea = document.getElementById("login-area");
 	if (loginArea) loginArea.classList.remove("hidden");
 	const roomBar = document.getElementById("room-bar");
@@ -615,6 +618,11 @@ function setFullscreenGridHeight() {
 	grid.style.height = `${Math.max(0, availableHeight)}px`;
 }
 
+function setFullscreenMode(active) {
+	document.documentElement.classList.toggle("fullscreen-mode", active);
+	document.body.classList.toggle("fullscreen-mode", active);
+}
+
 let toggle_var = true;
 function toggle() {
 	if (toggle_var) {
@@ -636,6 +644,7 @@ function toggle() {
 		const settingsPanel = document.getElementById("settings-panel");
 		if (settingsPanel) settingsPanel.style.display = "none";
 		closeTooltip();
+		setFullscreenMode(true);
 		setFullscreenGridHeight();
 		toggle_var = false;
 	} else {
@@ -649,12 +658,15 @@ function toggle() {
 					if (roomBar && lastData) roomBar.classList.remove("hidden");
 					const panel = document.getElementById("settings-panel");
 					if (panel && lastData?.members?.[currentID]?.admin)
-						panel.style.display = ""; const row = document.getElementById("settings-row"); if (row) row.style.display = "";
+						panel.style.display = "";
+					const row = document.getElementById("settings-row");
+					if (row) row.style.display = "";
 				});
 			},
 		);
 		document.querySelector(".info-trigger")?.classList.remove("hidden");
 		document.getElementById("grid-container").style.height = "70vmin";
+		setFullscreenMode(false);
 		toggle_var = true;
 	}
 	adjustFontSize();
@@ -815,10 +827,14 @@ socket.on("roomUpdate", (data) => {
 	if (stats) stats.style.display = "";
 	const panel = document.getElementById("settings-panel");
 	const isSpymaster = data.members[currentID]?.admin;
-if (isSpymaster) {
-		if (panel) panel.style.display = ""; const row = document.getElementById("settings-row"); if (row) row.style.display = "";
+	if (isSpymaster) {
+		if (panel) panel.style.display = "";
+		const row = document.getElementById("settings-row");
+		if (row) row.style.display = "";
 	} else {
-		if (panel) panel.style.display = "none"; const row = document.getElementById("settings-row"); if (row) row.style.display = "none";
+		if (panel) panel.style.display = "none";
+		const row = document.getElementById("settings-row");
+		if (row) row.style.display = "none";
 	}
 
 	document.getElementById("fullscreen-control").classList.remove("hidden");
@@ -854,7 +870,7 @@ if (isSpymaster) {
 		}
 	}
 
-// show room info
+	// show room info
 	const isAdmin = data.members[currentID]?.admin;
 	const memberEntries = Object.entries(data.members);
 	memberEntries.sort(([, a], [, b]) => {
@@ -867,13 +883,14 @@ if (isSpymaster) {
 		const isYou = id == currentID;
 		const star = member.admin ? '<span class="member-star">★</span>' : "";
 		const you = isYou ? " <span class='member-you'>(you)</span>" : "";
-		const nameClass = "member-name" + (isAdmin ? " member-name--clickable" : "");
+		const nameClass =
+			"member-name" + (isAdmin ? " member-name--clickable" : "");
 		memberSpans.push(
 			`<span class="member-item" data-member-id="${id}">${star}<span class="${nameClass}">${member.name}</span>${you}</span>`,
 		);
 	}
 	document.getElementById("room_info").innerHTML =
-			`<span class="room-id-label">${data.id}</span><div class="member-list">${memberSpans.join(", ")}</div>`;
+		`<span class="room-id-label">${data.id}</span><div class="member-list">${memberSpans.join(", ")}</div>`;
 
 	// Admins click a name to toggle spymaster status.
 	Array.from(
