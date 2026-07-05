@@ -882,7 +882,7 @@ socket.on("roomUpdate", (data) => {
 	for (const [id, member] of memberEntries) {
 		const isYou = id == currentID;
 		const star = member.admin ? '<span class="member-star">★</span>' : "";
-		const you = isYou ? " <span class='member-you'>(you)</span>" : "";
+		const you = isYou ? '<span class="member-you">(you)</span>' : "";
 		const nameClass =
 			"member-name" + (isAdmin ? " member-name--clickable" : "");
 		memberSpans.push(
@@ -890,7 +890,7 @@ socket.on("roomUpdate", (data) => {
 		);
 	}
 	document.getElementById("room_info").innerHTML =
-		`<span class="room-id-label">${data.id}</span><div class="member-list">${memberSpans.join(", ")}</div>`;
+		`<span class="room-id-label">${data.id}</span><div class="member-list">${memberSpans.join("")}</div>`;
 
 	// Admins click a name to toggle spymaster status.
 	Array.from(

@@ -540,46 +540,49 @@ canvas {
 /* --- Lobby member list --------------------------------------------------- */
 
 #room_info {
+	display: block;
 	font-size: 0.85em;
-	line-height: 1.25;
+	line-height: 1.35;
 }
 
 .room-id-label {
 	display: block;
 	font-weight: 600;
-	line-height: 1.25;
+	line-height: 1.35;
 }
 
 .member-list {
 	display: inline-flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	align-items: center;
-	gap: 0 0.35em;
-	line-height: 1.25;
+	align-items: baseline;
+	gap: 0 0.6em;
+	line-height: 1.35;
 }
 
 .member-item {
 	display: inline-flex;
-	align-items: center;
+	align-items: baseline;
 	gap: 0.15em;
-	height: 1.25em;
-	line-height: 1.25;
+	line-height: 1.35;
 	white-space: nowrap;
+}
+
+.member-item:not(:last-child)::after {
+	content: ",";
+	margin-left: 0.05em;
 }
 
 .member-star,
 .member-name,
 .member-you {
-	display: inline-flex;
-	align-items: center;
-	height: 1.25em;
-	line-height: 1.25;
+	display: inline-block;
+	line-height: 1.35;
 }
 
 .member-star {
 	color: #242424;
-	font-size: 0.85em;
+	font-size: 0.9em;
 	user-select: none;
 }
 
@@ -615,18 +618,4 @@ canvas {
 
 #settings-panel .admin-control-column {
 	gap: 0.3rem;
-}
-
-.member-list {
-	display: inline-flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	align-items: center;
-	gap: 0.15em;
-}
-
-.member-item > * {
-	display: inline-flex;
-	align-items: center;
-	line-height: 1.2;
 }
