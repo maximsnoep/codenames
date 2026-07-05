@@ -200,6 +200,10 @@ function joinRoom() {
 	localStorage.setItem("cn_user", user);
 	socket.emit("joinRoom", { room_id: room, user_name: user });
 }
+function exitRoom() {
+	socket.emit("leaveRoom");
+	resetRoom();
+}
 
 socket.on("ask", () => {
 	socket.emit("register", currentID);
@@ -211,7 +215,13 @@ socket.on("return", (data) => {
 	sessionStorage.setItem("codenames_user_id", currentID);
 	loadSettings();
 });
-
+socket.on("nameTaken", (room_id) => {
+	const msg = document.getElementById("name-taken-msg");
+	if (msg) {
+		msg.classList.remove("hidden");
+		setTimeout(() => msg.classList.add("hidden"), 3000);
+	}
+});
 function isCurrentUserAdmin() {
 	return Boolean(lastData?.members?.[currentID]?.admin);
 }
@@ -249,6 +259,16 @@ function resetRoom() {
 			o.classList.add("hidden");
 		},
 	);
+const panel = document.getElementById("settings-panel");
+	if (panel) panel.classList.add("hidden");
+	const loginArea = document.getElementById("login-area");
+	if (loginArea) loginArea.classList.remove("hidden");
+	const roomBar = document.getElementById("room-bar");
+	if (roomBar) roomBar.classList.add("hidden");
+const grid = document.getElementById("grid-container");
+	if (grid) grid.classList.add("hidden");
+	const stats = document.getElementById("stats-lower");
+	if (stats) stats.style.display = "none";
 	lastData = null;
 	currentTurnStart = null;
 	loadSettings();
@@ -267,9 +287,24 @@ document.addEventListener("DOMContentLoaded", function () {
 	document
 		.getElementById("codenames-title")
 		.addEventListener("click", triggerHiddenWinAnimation);
+	// Real-time name uniqueness check.
+	document.getElementById("user_name").addEventListener("input", () => {
+		const name = document.getElementById("user_name").value.toLowerCase();
+		const msg = document.getElementById("name-taken-msg");
+		if (!msg || !name) {
+			if (msg) msg.classList.add("hidden");
+			return;
+		}
+		const taken =
+			lastData &&
+			Object.values(lastData.members).some((m) => m.name === name);
+		if (taken && lastData.members[currentID]?.name !== name) {
+			msg.classList.remove("hidden");
+		} else {
+			msg.classList.add("hidden");
+		}
+	});
 
-	// Wire local view toggles exactly once. Each change persists the setting and
-	// re-renders the current board.
 	["colors", "sorted"].forEach((id) => {
 		document.getElementById(id).addEventListener("change", () => {
 			saveSettings();
@@ -429,9 +464,10 @@ function getStats(data) {
 // --- Turn timer ------------------------------------------------------------
 
 let lastZzzCycle = -1;
+let lastShakeState = null; // tracks current shake / dead state to avoid animation restarts
 
 function updateSleepyZzz(el, elapsed) {
-	const cycle = Math.floor((elapsed - 20 * 60) / 21.6);
+	const cycle = Math.floor((elapsed - 10 * 60) / 21.6);
 	if (cycle === lastZzzCycle) return;
 	lastZzzCycle = cycle;
 
@@ -453,6 +489,27 @@ function clearSleepyZzz(el) {
 }
 
 function updateTimerShake(el, elapsed) {
+	// Determine the desired state so we only touch the DOM when it changes,
+	// preventing CSS animations from restarting on every 250ms tick.
+	let desired = null;
+
+	if (elapsed >= 10 * 60) {
+		desired = "timer-dead";
+	} else if (elapsed >= 8 * 60) {
+		desired = "timer-shake-high";
+	} else if (elapsed >= 5 * 60) {
+		desired = "timer-shake-medium";
+	} else if (elapsed >= 2 * 60) {
+		desired = "timer-shake-low";
+	}
+
+	if (desired === lastShakeState) {
+		// Only zzz phrase may need updating while dead; classlist is unchanged.
+		if (desired === "timer-dead") updateSleepyZzz(el, elapsed);
+		return;
+	}
+
+	// Transition to new state — remove old classes and apply the new one.
 	el.classList.remove(
 		"timer-shake-low",
 		"timer-shake-medium",
@@ -460,22 +517,17 @@ function updateTimerShake(el, elapsed) {
 		"timer-dead",
 	);
 
-	if (elapsed >= 20 * 60) {
-		el.classList.add("timer-dead");
+	if (desired) {
+		el.classList.add(desired);
+	}
+
+	if (desired === "timer-dead") {
 		updateSleepyZzz(el, elapsed);
 	} else {
 		clearSleepyZzz(el);
 	}
 
-	if (elapsed >= 10 * 60) {
-		return;
-	} else if (elapsed >= 8 * 60) {
-		el.classList.add("timer-shake-high");
-	} else if (elapsed >= 5 * 60) {
-		el.classList.add("timer-shake-medium");
-	} else if (elapsed >= 2 * 60) {
-		el.classList.add("timer-shake-low");
-	}
+	lastShakeState = desired;
 }
 
 function updateTimer() {
@@ -568,6 +620,10 @@ function toggle() {
 			},
 		);
 		document.querySelector(".info-trigger")?.classList.add("hidden");
+	const roomBar = document.getElementById("room-bar");
+		if (roomBar) roomBar.classList.add("hidden");
+		const settingsPanel = document.getElementById("settings-panel");
+		if (settingsPanel) settingsPanel.classList.add("hidden");
 		closeTooltip();
 		setFullscreenGridHeight();
 		toggle_var = false;
@@ -578,6 +634,10 @@ function toggle() {
 				o.style.display = o.style.old_display;
 				Array.from(o.querySelectorAll("*")).forEach((c) => {
 					c.style.display = c.style.old_display;
+	const roomBar = document.getElementById("room-bar");
+		if (roomBar && lastData) roomBar.classList.remove("hidden");
+		const panel = document.getElementById("settings-panel");
+		if (panel && lastData?.members?.[currentID]?.admin) panel.classList.remove("hidden");
 				});
 			},
 		);
@@ -731,14 +791,31 @@ socket.on("wordlistUpdate", (data) => {
 });
 
 socket.on("roomUpdate", (data) => {
-	lastData = data;
-	document.getElementById("fullscreen-control").classList.remove("hidden");
-	currentTimerEnabled = data.timerEnabled !== false;
-	const assassinEnabled = data.assassinEnabled !== false;
-	document.getElementById("timer-toggle").checked = currentTimerEnabled;
-	document.getElementById("timer-readonly").checked = currentTimerEnabled;
-	document.getElementById("assassin-toggle").checked = assassinEnabled;
-	document.getElementById("assassin-readonly").checked = assassinEnabled;
+		lastData = data;
+
+		const loginArea = document.getElementById("login-area");
+		if (loginArea) loginArea.classList.add("hidden");
+		const roomBar = document.getElementById("room-bar");
+		if (roomBar) roomBar.classList.remove("hidden");
+	const grid = document.getElementById("grid-container");
+		if (grid) grid.classList.remove("hidden");
+		const stats = document.getElementById("stats-lower");
+		if (stats) stats.style.display = "";
+	const panel = document.getElementById("settings-panel");
+		const isSpymaster = data.members[currentID]?.admin;
+		if (isSpymaster) {
+			if (panel) panel.classList.remove("hidden");
+		} else {
+			if (panel) panel.classList.add("hidden");
+		}
+
+		document.getElementById("fullscreen-control").classList.remove("hidden");
+		currentTimerEnabled = data.timerEnabled !== false;
+		const assassinEnabled = data.assassinEnabled !== false;
+		document.getElementById("timer-toggle").checked = currentTimerEnabled;
+		document.getElementById("timer-readonly").checked = currentTimerEnabled;
+		document.getElementById("assassin-toggle").checked = assassinEnabled;
+		document.getElementById("assassin-readonly").checked = assassinEnabled;
 
 	// show grid
 	let sorted = document.getElementById("sorted").checked;
@@ -766,36 +843,41 @@ socket.on("roomUpdate", (data) => {
 	}
 
 	// show room info
-	// make bold for this user
-	// make underline for admin
-	//
-	// A name only shows a number once the room has ever had more than one
-	// member with that name. The number is assigned at join time and is
-	// persistent, so it stays stable even after others leave.
 	let members = [];
+	const isAdmin = data.members[currentID]?.admin;
 	for (const [id, member] of Object.entries(data.members)) {
-		let bold = "";
-		let underline = "";
-		if (id == currentID) {
-			bold = "font-weight: bold;";
-		}
-		if (member.admin) {
-			underline = "text-decoration: underline;";
-		}
-		const duplicated = (data.name_counts[member.name] || 0) > 1;
-		const label = duplicated
-			? `${member.name} ${member.number}`
-			: member.name;
-		let m = `<span class="member-item" id="${id}" style="${bold}${underline}">${label}</span>`;
-		members.push(m);
+		const isYou = id == currentID;
+		const star = member.admin ? '<span class="member-star">★</span>' : "";
+		const you = isYou ? " <span class='member-you'>(you)</span>" : "";
+		const nameClass =
+			"member-name" + (isAdmin ? " member-name--clickable" : "");
+
+		members.push(
+			`<span class="member-item" data-member-id="${id}">${star}<span class="${nameClass}">${member.name}</span>${you}</span>`,
+		);
 	}
 	document.getElementById("room_info").innerHTML =
-		`${data.id}: ${members.join(", ")}`;
+		`<span class="room-id-label">${data.id}</span><br>${members.join(" ")}`;
 
-	// make admin upon click
-	Array.from(document.getElementsByClassName("member-item")).forEach((m) => {
-		m.addEventListener("click", (e) => {
-			socket.emit("toggleAdmin", e.target.id);
+	// Admins click a name to toggle spymaster status.
+	Array.from(
+		document.getElementsByClassName("member-name--clickable"),
+	).forEach((n) => {
+		n.addEventListener("click", (e) => {
+			const targetId = e.target.closest(".member-item").dataset.memberId;
+			if (targetId == currentID && data.members[currentID]?.admin) {
+				const totalSpymasters = Object.values(data.members).filter(
+					(m) => m.admin,
+				).length;
+				const msg =
+					totalSpymasters === 1
+						? "You are the last spymaster. Removing the role will promote a random player instead. Continue?"
+						: "Remove spymaster role from yourself?";
+				if (!confirm(msg)) {
+					return;
+				}
+			}
+			socket.emit("toggleAdmin", targetId);
 		});
 	});
 

@@ -9,17 +9,15 @@ const server = http.createServer(app);
 const io = socketIO(server);
 const WORDLIST_DIR = path.join(__dirname, "public", "wordlists");
 
-// serve all files in /public as static files
 app.use(express.static("public"));
 
 server.listen(8080, () => {
 	console.log("Codenames is running on http://localhost:8080");
 });
 
-const CHECK_INTERVAL = 5; // seconds
-const INACTIVE_TIMEOUT = 30 * 1000; // milliseconds
+const CHECK_INTERVAL = 5;
+const INACTIVE_TIMEOUT = 30 * 1000;
 
-// Periodic Check to Remove Inactive Users
 setInterval(() => {
 	console.log(
 		`Currently active users: ${Object.keys(activeUsers).length}. Checking for inactive users.`,
@@ -39,7 +37,7 @@ setInterval(() => {
 		if (user.missedPings * CHECK_INTERVAL * 1000 >= INACTIVE_TIMEOUT) {
 			removeInactiveUser(userID, "missed ping timeout");
 		} else {
-			io.to(user.socketID).emit("ping"); // Ask for response
+			io.to(user.socketID).emit("ping");
 		}
 	});
 }, CHECK_INTERVAL * 1000);
@@ -219,7 +217,6 @@ const Member = class {
 	constructor(name) {
 		this.name = name;
 		this.admin = false;
-		this.number = 0; // per-name join number, assigned by the room on add
 	}
 };
 
@@ -227,23 +224,23 @@ const Room = class {
 	constructor(id) {
 		this.id = id;
 		this.members = {};
-		// How many members have EVER joined with each base name. Persists for
-		// the life of the room so numbers stay stable when members leave.
-		this.name_counts = {};
 		this.assassinEnabled = true;
 		this.timerEnabled = true;
 		this.game = new Game("original", this.assassinEnabled);
 	}
 
-	// member management
 	is_member(id) {
 		return id in this.members;
 	}
+	is_name_taken(name) {
+		return Object.values(this.members).some((m) => m.name === name);
+	}
 	add_member(id, m) {
-		const count = (this.name_counts[m.name] || 0) + 1;
-		this.name_counts[m.name] = count;
-		m.number = count;
+		if (this.is_name_taken(m.name)) {
+			return false;
+		}
 		this.members[id] = m;
+		return true;
 	}
 	del_member(id) {
 		delete this.members[id];
@@ -252,7 +249,6 @@ const Room = class {
 		return Object.keys(this.members).length;
 	}
 
-	// admin management
 	is_admin(id) {
 		return this.is_member(id) && this.members[id].admin;
 	}
@@ -273,12 +269,10 @@ const RoomManager = class {
 		this.rooms = {};
 	}
 
-	// room management
 	is_room(id) {
 		return id in this.rooms;
 	}
 
-	// user management
 	is_member_in_room(user_id, room_id) {
 		return this.is_room(room_id) && this.rooms[room_id].is_member(user_id);
 	}
@@ -290,7 +284,6 @@ const RoomManager = class {
 		);
 	}
 
-	// remove user from room
 	remove_user_from_room(user_id, room_id) {
 		if (this.is_member_in_room(user_id, room_id)) {
 			this.rooms[room_id].del_member(user_id);
@@ -298,7 +291,7 @@ const RoomManager = class {
 				console.log(
 					`Room <${room_id}> is now empty and will be deleted.`,
 				);
-				delete this.rooms[room_id]; // Remove empty room immediately
+				delete this.rooms[room_id];
 			} else if (this.rooms[room_id].num_admins() === 0) {
 				this.rooms[room_id].add_admin(
 					Object.keys(this.rooms[room_id].members)[0],
@@ -307,19 +300,16 @@ const RoomManager = class {
 		}
 	}
 
-	// remove user from all rooms
 	remove_user_from_all_rooms(user_id) {
 		for (const room_id of this.rooms_of_user(user_id)) {
 			this.remove_user_from_room(user_id, room_id);
 		}
 	}
 
-	// add user to room
 	add_user_to_room(user_id, user_name, room_id) {
 		this.rooms[room_id].add_member(user_id, new Member(user_name));
 	}
 
-	// all rooms of a user
 	rooms_of_user(user_id) {
 		return Object.keys(this.rooms).filter((room_id) =>
 			this.is_member_in_room(user_id, room_id),
@@ -333,7 +323,6 @@ const RoomManager = class {
 };
 
 const room_manager = new RoomManager();
-// Track { userID: { socketID, missedPings, disconnectedAt } }
 const activeUsers = {};
 
 function broadcastRoomUpdate(room_id) {
@@ -452,6 +441,12 @@ io.on("connection", (socket) => {
 			room_manager.rooms[room_id] = new Room(room_id);
 			room_manager.add_user_to_room(currentID, user_name, room_id);
 			room_manager.rooms[room_id].add_admin(currentID);
+		} else if (room_manager.rooms[room_id].is_name_taken(user_name)) {
+			console.log(
+				`${currentID} tried to join <${room_id}> as "${user_name}" but name is taken.`,
+			);
+			io.to(socket.id).emit("nameTaken", room_id);
+			return;
 		} else {
 			console.log(`${currentID} joined <${room_id}>`);
 			room_manager.add_user_to_room(currentID, user_name, room_id);
@@ -459,6 +454,9 @@ io.on("connection", (socket) => {
 
 		socket.join(room_id);
 		update(room_id);
+	});
+	socket.on("leaveRoom", () => {
+		leave_room();
 	});
 
 	socket.on("toggleAdmin", (user_id) => {
