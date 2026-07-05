@@ -461,6 +461,7 @@ button:active {
 	}
 
 	.admin-control-column strong {
+		flex: 1 1 100%;
 		min-width: 4rem;
 	}
 
