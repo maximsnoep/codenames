@@ -20,6 +20,10 @@ function loadSettings() {
 	const spymasterView = localStorage.getItem("cn_spymaster_view") === "true";
 	const assassin = localStorage.getItem("cn_assassin") !== "false";
 	const timer = localStorage.getItem("cn_timer") === "true";
+	const multiInput = document.getElementById("wordlist-multi-toggle");
+	if (multiInput) {
+		multiInput.checked = localStorage.getItem("cn_wordlist_multi") === "true";
+	}
 
 	const spymasterViewInput = document.getElementById("spymaster-view");
 	const assassinInput = document.getElementById("assassin-toggle");
@@ -69,13 +73,19 @@ function getSelectedWordlists() {
 	).map((input) => input.value);
 }
 
+function isWordlistMultiSelect() {
+	return document.getElementById("wordlist-multi-toggle")?.checked === true;
+}
+
+// In single-select mode only one list may stay checked; keep the first one.
 function updateWordlistMenuMode() {
 	const menu = document.getElementById("wordlists");
-	if (!menu) return;
+	if (!menu || isWordlistMultiSelect()) return;
 
-	Array.from(menu.querySelectorAll("input")).forEach((input) => {
-		input.type = "checkbox";
-		input.removeAttribute("name");
+	let kept = false;
+	Array.from(menu.querySelectorAll("input:checked")).forEach((input) => {
+		if (kept) input.checked = false;
+		kept = true;
 	});
 }
 
@@ -157,6 +167,7 @@ function joinRoom() {
 
 	localStorage.removeItem("cn_selected_wordlists");
 	localStorage.removeItem("cn_wordlists");
+	localStorage.removeItem("cn_wordlist_multi");
 	loadSettings();
 	socket.emit("joinRoom", { room_id: room, user_name: user });
 }
@@ -346,6 +357,14 @@ document.addEventListener("DOMContentLoaded", function () {
 		updateTimer();
 		socket.emit("setTimerEnabled", currentTimerEnabled);
 	});
+
+	document
+		.getElementById("wordlist-multi-toggle")
+		.addEventListener("change", () => {
+			localStorage.setItem("cn_wordlist_multi", isWordlistMultiSelect());
+			updateWordlistMenuMode();
+			saveSelectedWordlists();
+		});
 
 	document.addEventListener("click", (event) => {
 		const dropdown = document.getElementById("wordlist-dropdown");
@@ -772,6 +791,11 @@ socket.on("wordlistUpdate", (data) => {
 		input.value = list;
 		input.checked = selected.includes(list);
 		input.addEventListener("change", () => {
+			if (input.checked && !isWordlistMultiSelect()) {
+				wordlists.querySelectorAll("input:checked").forEach((other) => {
+					if (other !== input) other.checked = false;
+				});
+			}
 			saveSelectedWordlists();
 		});
 
