@@ -11,8 +11,6 @@ let currentTurnStart = null;
 // Room-shared setting controlled by admins.
 let currentTimerEnabled = false;
 
-let titleClickCount = 0;
-let titleClickTimeout = null;
 
 // --- Persistent settings (localStorage) ------------------------------------
 
@@ -252,23 +250,6 @@ function isCurrentUserAdmin() {
 	return Boolean(lastData?.members?.[currentID]?.admin);
 }
 
-function triggerHiddenWinAnimation() {
-	clearTimeout(titleClickTimeout);
-	titleClickCount += 1;
-
-	if (titleClickCount >= 5) {
-		titleClickCount = 0;
-		if (isCurrentUserAdmin()) {
-			socket.emit("forceWin");
-		}
-		return;
-	}
-
-	titleClickTimeout = setTimeout(() => {
-		titleClickCount = 0;
-	}, 1500);
-}
-
 function resetRoom() {
 	setFullscreenMode(false);
 	document.getElementById("fullscreen-control").classList.add("hidden");
@@ -316,9 +297,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	loadSettings();
 
-	document
-		.getElementById("codenames-title")
-		.addEventListener("click", triggerHiddenWinAnimation);
 	// Real-time name uniqueness check.
 	document.getElementById("user_name").addEventListener("input", () => {
 		const name = document.getElementById("user_name").value.toLowerCase();
@@ -916,11 +894,11 @@ socket.on("roomUpdate", (data) => {
 				const totalSpymasters = Object.values(data.members).filter(
 					(m) => m.admin,
 				).length;
-				const msg =
-					totalSpymasters === 1
-						? "You are the last spymaster. Removing the role will promote a random player instead. Continue?"
-						: "Remove spymaster role from yourself?";
-				if (!confirm(msg)) {
+				if (totalSpymasters === 1) {
+					alert("You are the last spymaster, so you can't remove your role.");
+					return;
+				}
+				if (!confirm("Remove spymaster role from yourself?")) {
 					return;
 				}
 			}

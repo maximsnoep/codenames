@@ -207,6 +207,19 @@ button::before {
 	text-align: left;
 }
 
+.info-trigger {
+	display: inline-block;
+	padding: 0.3rem 0.8rem;
+	border: 1.5px solid #242424;
+	border-radius: 0.4rem;
+	font-size: 1.1rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	color: #242424;
+	cursor: pointer;
+	user-select: none;
+}
+
 .app-room-bar {
 	justify-self: center;
 }
@@ -455,8 +468,8 @@ button::before {
 	}
 
 	.tooltip-content {
-		left: 50% !important;
-		transform: translateX(-50%);
+		left: 0 !important;
+		box-sizing: border-box;
 		width: calc(100vw - 2rem);
 		max-width: 28rem;
 	}

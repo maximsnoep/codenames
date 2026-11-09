@@ -21,28 +21,12 @@
 
 		<div class="app-header">
 			<div class="toggleable app-title">
-				<strong id="codenames-title">codenames</strong>
 				<span
 					class="info-trigger"
-					style="
-						cursor: pointer;
-						z-index: 100;
-						display: inline-flex;
-						align-items: center;
-						justify-content: center;
-						width: 13px;
-						height: 13px;
-						border-radius: 50%;
-						border: 1.2px solid #242424;
-						font-size: 9px;
-						font-weight: 700;
-						color: #242424;
-						line-height: 1;
-					"
 					onclick="toggleTooltip(this)"
 					onmouseover="showTooltip(this)"
 					onmouseout="delayedHideTooltip()"
-					>i</span
+					>HELP</span
 				>
 				<div
 					class="tooltip-content"
@@ -89,13 +73,24 @@
 						</li>
 						<li>You may pass instead of guessing.</li>
 					</ul>
-					<p><strong>Controls:</strong></p>
+					<p><strong>Spymasters (★) can:</strong></p>
 					<ul>
-						<li>Your name is denoted with a (you).</li>
-						<li>Spymasters are denoted with a (★).</li>
-						<li>First player in a room becomes spymaster.</li>
-						<li>Spymasters click a name to promote or demote.</li>
-						<li>Spymasters double-click a card to reveal it.</li>
+						<li>See the card colors (turn on "spymaster view").</li>
+						<li>Reveal a card: tap it, then tap it again.</li>
+						<li>Press "next" to end the turn.</li>
+						<li>Pick word lists and start a new game.</li>
+						<li>Turn the assassin and the timer on or off.</li>
+						<li>Tap a player's name to make them spymaster, or remove it.</li>
+					</ul>
+					<p><strong>Spymasters can't:</strong></p>
+					<ul>
+						<li>Remove the last spymaster: a room always has one.</li>
+					</ul>
+					<p><strong>Everyone else:</strong></p>
+					<ul>
+						<li>Sees the board and guesses words out loud.</li>
+						<li>The first player in a room is spymaster.</li>
+						<li>If all spymasters leave, the longest-staying player takes over.</li>
 					</ul>
 				</div>
 			</div>
@@ -118,10 +113,14 @@
 				e.nextElementSibling.style.display = "block";
 			}
 			function toggleTooltip(e) {
-				const t = e.nextElementSibling;
-				t.style.display =
-					t.style.display === "block" ? "none" : "block";
+				showTooltip(e);
 			}
+			// Close the help popup when tapping anywhere outside it.
+			document.addEventListener("click", (event) => {
+				if (!event.target.closest(".info-trigger, .tooltip-content")) {
+					closeTooltip();
+				}
+			});
 			function closeTooltip() {
 				const t = document.querySelector(".tooltip-content");
 				if (t) t.style.display = "none";
