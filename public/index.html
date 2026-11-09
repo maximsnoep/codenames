@@ -241,10 +241,12 @@
 							onkeydown="return /[a-z]/i.test(event.key);"
 						/>
 					</div>
+					<span class="login-hint">up to 8 letters</span>
 					<span id="name-taken-msg" class="name-taken-msg hidden"
 						>name taken</span
 					>
 					<div id="rooms-list"></div>
+					<div class="login-divider">or start a new one</div>
 					<div class="login-new-room">
 						<input
 							type="text"
@@ -252,6 +254,7 @@
 							size="8"
 							maxlength="8"
 							value=""
+							placeholder="room name"
 							autocomplete="off"
 							autocorrect="off"
 							autocapitalize="off"
@@ -261,6 +264,7 @@
 							create
 						</button>
 					</div>
+					<span class="login-hint">up to 8 letters</span>
 				</div>
 				<div
 					id="grid-container"
