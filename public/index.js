@@ -202,20 +202,27 @@ socket.on("roomsList", (data) => {
 	const serverStarted = data?.serverStarted;
 	const totalReveals = data?.totalReveals != null ? data.totalReveals : 0;
 
-	let html = '<div class="rooms-list-title">current rooms</div>';
+	let html = "";
 	if (rooms.length === 0) {
-		html += '<div class="rooms-list-empty">no active rooms</div>';
+		html = '<div class="rooms-list-empty">no active rooms</div>';
 	} else {
-		html += rooms
+		html = rooms
 			.map((r) => {
 				const score = r.over
 					? "&mdash;"
 					: `<span class="room-score-red">${9 - r.red}</span> &ndash; <span class="room-score-blue">${8 - r.blue}</span>`;
-				return `<button class="room-chip" onclick="joinRoomFromList('${r.id}')"><span class="room-chip-name">${r.id}</span><span class="room-chip-members">${r.members} player${r.members !== 1 ? "s" : ""}</span><span class="room-chip-score">${score}</span></button>`;
+				const players = `${r.members} player${r.members !== 1 ? "s" : ""}`;
+				return `<button class="room-chip" onclick="joinRoomFromList('${r.id}')"><span><span class="room-chip-name">${r.id}</span><span class="room-chip-members">${players}</span></span><span class="room-chip-score">${score}</span><span class="room-chip-join">join &rarr;</span></button>`;
 			})
 			.join("");
 	}
 	list.innerHTML = html;
+
+	const divider = document.getElementById("login-divider");
+	if (divider) {
+		divider.textContent =
+			rooms.length === 0 ? "start a new room" : "or start a new one";
+	}
 
 	if (footer && serverStarted) {
 		const ago = Math.max(0, Date.now() - serverStarted);

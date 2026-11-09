@@ -685,47 +685,73 @@ canvas {
 
 /* --- Login area ---------------------------------------------------------- */
 
+/* Login is one white card: name, room list, then create a room. */
 #login-area {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	gap: 0.35rem;
-	text-align: center;
-	padding: 0 1rem;
+	align-items: stretch;
+	box-sizing: border-box;
+	width: min(24rem, calc(100vw - 2rem));
+	margin: 0 auto;
+	padding: 1.5rem;
+	background-color: #ffffff;
+	border: 1px solid #e2e2e2;
+	border-radius: 0.75rem;
+	box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.06);
+	text-align: left;
 }
 
-.login-player,
-.login-new-room {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
+.login-step {
+	margin-bottom: 0.4rem;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #888;
+}
+
+.login-section {
+	margin-top: 1.5rem;
+}
+
+#login-area input.login-field {
+	width: 100%;
+	min-width: 0;
+	padding: 0.6rem 0.75rem;
+	border: 1.5px solid #ccc;
+	border-radius: 0.5rem;
+	background-color: #fafafa;
+	font-size: 1.15rem;
+}
+
+#login-area input.login-field:focus {
+	border-color: #242424;
+	background-color: #ffffff;
+}
+
+#login-area input.login-field::placeholder {
+	color: #aaa;
 }
 
 .login-hint {
-	font-size: 0.75em;
+	margin-top: 0.3rem;
+	font-size: 0.8rem;
 	color: #888;
 }
 
 #rooms-list {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	margin-top: 1.5rem;
-}
-
-.rooms-list-title {
-	font-weight: 600;
-	margin-bottom: 0.4rem;
+	gap: 0.4rem;
 }
 
 .login-divider {
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-	width: min(16rem, 100%);
-	margin: 1.25rem 0 0.5rem;
-	font-size: 0.75em;
-	color: #888;
+	margin: 1.25rem 0 0.9rem;
+	font-size: 0.8rem;
+	color: #aaa;
 }
 
 .login-divider::before,
@@ -733,45 +759,73 @@ canvas {
 	content: "";
 	flex: 1;
 	height: 1px;
-	background-color: #ccc;
+	background-color: #e2e2e2;
 }
 
-#room_id::placeholder {
-	color: #aaa;
+.login-new-room {
+	display: flex;
+	gap: 0.5rem;
 }
 
-/* Rooms are plain text rows: name, players, score. */
+.login-new-room .login-field {
+	flex: 1;
+}
+
+.login-create {
+	padding: 0 1.1rem;
+	border-radius: 0.5rem;
+	background-color: #242424;
+	color: #ffffff;
+	font-weight: 700;
+}
+
+.login-create:hover {
+	background-color: #000000;
+}
+
+/* Each room is a full-width row: name and players, score, join. */
 .room-chip {
 	display: grid;
-	grid-template-columns: 5.5rem 5rem 3.5rem;
-	align-items: baseline;
+	grid-template-columns: 1fr auto auto;
+	align-items: center;
 	gap: 0.75rem;
-	padding: 0.25rem 0.6rem;
-	border: none;
-	border-radius: 0.35rem;
-	background-color: transparent;
+	width: 100%;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid #e2e2e2;
+	border-radius: 0.5rem;
+	background-color: #ffffff;
 	color: #242424;
 	font: inherit;
 	font-weight: 400;
+	letter-spacing: normal;
 	text-align: left;
 	cursor: pointer;
 }
 
 .room-chip:hover {
-	background-color: rgba(0, 0, 0, 0.05);
+	border-color: #242424;
+	background-color: #ffffff;
 }
 
 .room-chip-name {
+	display: block;
 	font-weight: 600;
 }
 
 .room-chip-members {
+	display: block;
+	font-size: 0.85rem;
 	color: #888;
 }
 
 .room-chip-score {
-	text-align: right;
+	font-weight: 700;
 	font-variant-numeric: tabular-nums;
+}
+
+.room-chip-join {
+	font-size: 0.85rem;
+	font-weight: 600;
 }
 
 .room-score-red {
@@ -785,7 +839,12 @@ canvas {
 }
 
 .rooms-list-empty {
+	padding: 0.6rem 0;
+	border: 1px dashed #ccc;
+	border-radius: 0.5rem;
 	color: #888;
+	font-size: 0.9rem;
+	text-align: center;
 }
 
 .server-footer {

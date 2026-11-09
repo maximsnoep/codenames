@@ -223,34 +223,37 @@
 					align-items: center;
 				"
 			>
-				<div id="login-area">
-					<div class="login-player">
-						<label for="user_name" style="font-weight: 600"
-							>name</label
-						>
-						<input
-							type="text"
-							id="user_name"
-							size="8"
-							maxlength="8"
-							value=""
-							autocomplete="off"
-							autocorrect="off"
-							autocapitalize="off"
-							spellcheck="false"
-							onkeydown="return /[a-z]/i.test(event.key);"
-						/>
-					</div>
+				<div id="login-area" class="login-card">
+					<label for="user_name" class="login-step">1 · your name</label>
+					<input
+						type="text"
+						id="user_name"
+						class="login-field"
+						size="8"
+						maxlength="8"
+						value=""
+						autocomplete="off"
+						autocorrect="off"
+						autocapitalize="off"
+						spellcheck="false"
+						onkeydown="return /[a-z]/i.test(event.key);"
+					/>
 					<span class="login-hint">up to 8 letters</span>
 					<span id="name-taken-msg" class="name-taken-msg hidden"
 						>name taken</span
 					>
+
+					<div class="login-step login-section">2 · join a room</div>
 					<div id="rooms-list"></div>
-					<div class="login-divider">or start a new one</div>
+
+					<div class="login-divider" id="login-divider">
+						or start a new one
+					</div>
 					<div class="login-new-room">
 						<input
 							type="text"
 							id="room_id"
+							class="login-field"
 							size="8"
 							maxlength="8"
 							value=""
@@ -260,7 +263,7 @@
 							autocapitalize="off"
 							spellcheck="false"
 						/>
-						<button class="compact-button" onclick="joinRoom()">
+						<button class="login-create" onclick="joinRoom()">
 							create
 						</button>
 					</div>
