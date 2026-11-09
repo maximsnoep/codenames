@@ -738,7 +738,7 @@ socket.on("wordlistUpdate", (data) => {
 	const groups = [
 		{
 			title: "official",
-			lists: ["original", "duet", "undercover", "german", "serbian"],
+			lists: ["original", "duet", "undercover", "german", "dutch", "serbian"],
 		},
 		{
 			title: "custom",
@@ -746,7 +746,6 @@ socket.on("wordlistUpdate", (data) => {
 				"countries", 
 				"europe", 
 				"colors",
-				"dutch",
 				"german2",
 				"halloween",
 				"geometry",
