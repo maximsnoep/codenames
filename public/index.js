@@ -743,18 +743,18 @@ socket.on("wordlistUpdate", (data) => {
 		{
 			title: "custom",
 			lists: [
+				"countries", 
+				"europe", 
+				"colors",
 				"dutch",
 				"german2",
 				"halloween",
 				"geometry",
 				"na’vi",
-				"genz",
 				"theroom",
+				"genz",
+				"emoji"
 			],
-		},
-		{
-			title: "chaos",
-			lists: ["countries", "europe", "colors", "emoji"],
 		},
 	];
 
